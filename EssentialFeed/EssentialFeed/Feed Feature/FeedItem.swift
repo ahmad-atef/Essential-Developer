@@ -1,6 +1,6 @@
 struct FeedItem {
-    let id: String
+    let id: UUID
+    let imageURL: URL
     let description: String?
     let location: String?
-    let imageURL: URL
 }
