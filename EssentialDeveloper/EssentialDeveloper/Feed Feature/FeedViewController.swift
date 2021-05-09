@@ -39,6 +39,7 @@ class FeedViewController: UIViewController {
 }
 
 class Demo: UIViewController {
+
     let feedVC = FeedViewController()
     func test() {
         feedVC.loadFeed()
