@@ -6,50 +6,52 @@
 //
 
 import XCTest
+import EssentialFeed
 
-class RemoteFeedLoader {
-
-    private let client: HTTPClient
-    let url: URL
-
-    init(url: URL = URL(string: "https://a-url.com")!, client: HTTPClient) {
-        self.url = url
-        self.client = client
-    }
-
-    func load() {
-        client.request(from: url)
-    }
-}
-
-protocol HTTPClient {
-    func request(from url: URL)
-}
-
-class HTTPSpyClient: HTTPClient {
-    var requestedURL: URL?
+final class HTTPSpyClient: HTTPClient {
+    var requestedURLs: [URL?] = []
 
     func request(from url: URL){
-        self.requestedURL = url
+        requestedURLs.append(url)
     }
 }
 
 class RemoteFeedLoaderTests: XCTestCase {
 
-    func testInitRemoteFeedLoader_doesNotRequestData_fromClient() {
+    func test_init_doesNotRequestDataFromClient() {
         let url = URL(string: "https://a-given-url.com")!
         let client = makeSpyClientAndRemoteLoader(from: url).client
 
-        XCTAssertNil(client.requestedURL)
+        XCTAssertTrue(client.requestedURLs.isEmpty)
     }
 
-    func testLoad_requestDataURL_fromClient() {
+    func test_load_requestsDataURLFromClient() {
         let url = URL(string: "https://a-given-url.com")!
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
         loader.load()
 
-        XCTAssertEqual(client.requestedURL, url)
+        XCTAssertEqual(client.requestedURLs, [url])
+    }
+
+    func testOneLoadDoesNotLoadMoreThanOneTime() {
+        let url = URL(string: "https://a-given-url.com")!
+        let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
+
+        loader.load()
+
+        XCTAssertEqual(client.requestedURLs.count, 1)
+    }
+
+    func test_loadTwice_requestDataFromClientTwice() {
+        let url = URL(string: "https://a-given-url.com")!
+        let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
+
+        loader.load()
+        loader.load()
+
+        XCTAssertEqual(client.requestedURLs.count, 2)
+        XCTAssertEqual(client.requestedURLs, [url, url])
     }
 
     private func makeSpyClientAndRemoteLoader(from url: URL) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
