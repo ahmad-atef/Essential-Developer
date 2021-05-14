@@ -8,11 +8,11 @@
 import XCTest
 import EssentialFeed
 
-class HTTPSpyClient: HTTPClient {
-    var requestedURL: URL?
+final class HTTPSpyClient: HTTPClient {
+    var requestedURLs: [URL?] = []
 
     func request(from url: URL){
-        self.requestedURL = url
+        requestedURLs.append(url)
     }
 }
 
@@ -22,7 +22,7 @@ class RemoteFeedLoaderTests: XCTestCase {
         let url = URL(string: "https://a-given-url.com")!
         let client = makeSpyClientAndRemoteLoader(from: url).client
 
-        XCTAssertNil(client.requestedURL)
+        XCTAssertTrue(client.requestedURLs.isEmpty)
     }
 
     func test_load_requestsDataURLFromClient() {
@@ -31,7 +31,27 @@ class RemoteFeedLoaderTests: XCTestCase {
 
         loader.load()
 
-        XCTAssertEqual(client.requestedURL, url)
+        XCTAssertEqual(client.requestedURLs, [url])
+    }
+
+    func testOneLoadDoesNotLoadMoreThanOneTime() {
+        let url = URL(string: "https://a-given-url.com")!
+        let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
+
+        loader.load()
+
+        XCTAssertEqual(client.requestedURLs.count, 1)
+    }
+
+    func test_loadTwice_requestDataFromClientTwice() {
+        let url = URL(string: "https://a-given-url.com")!
+        let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
+
+        loader.load()
+        loader.load()
+
+        XCTAssertEqual(client.requestedURLs.count, 2)
+        XCTAssertEqual(client.requestedURLs, [url, url])
     }
 
     private func makeSpyClientAndRemoteLoader(from url: URL) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
