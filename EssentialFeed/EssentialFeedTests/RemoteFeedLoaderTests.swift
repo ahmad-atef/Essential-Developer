@@ -8,25 +8,18 @@
 import XCTest
 import EssentialFeed
 
-final class HTTPSpyClient: HTTPClient {
-    var requestedURLs: [URL?] = []
-
-    func request(from url: URL){
-        requestedURLs.append(url)
-    }
-}
-
 class RemoteFeedLoaderTests: XCTestCase {
 
-    func test_init_doesNotRequestDataFromClient() {
-        let url = URL(string: "https://a-given-url.com")!
+    func testLoaderDoesNotRequestDataFromClientOnInit() {
+        let url:URL = .given
         let client = makeSpyClientAndRemoteLoader(from: url).client
 
         XCTAssertTrue(client.requestedURLs.isEmpty)
     }
 
-    func test_load_requestsDataURLFromClient() {
-        let url = URL(string: "https://a-given-url.com")!
+    func testLoaderRequestsDataURLFromClientOnLoad() {
+
+        let url:URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
         loader.load()
@@ -34,7 +27,7 @@ class RemoteFeedLoaderTests: XCTestCase {
         XCTAssertEqual(client.requestedURLs, [url])
     }
 
-    func testOneLoadDoesNotLoadMoreThanOneTime() {
+    func testLoaderRequestsDataURLFromClientOnLoadOnlyOnce() {
         let url = URL(string: "https://a-given-url.com")!
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
@@ -43,8 +36,8 @@ class RemoteFeedLoaderTests: XCTestCase {
         XCTAssertEqual(client.requestedURLs.count, 1)
     }
 
-    func test_loadTwice_requestDataFromClientTwice() {
-        let url = URL(string: "https://a-given-url.com")!
+    func testLoaderCanMakeMoreThanOneRequestFromClient() {
+        let url:URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
         loader.load()
@@ -54,9 +47,44 @@ class RemoteFeedLoaderTests: XCTestCase {
         XCTAssertEqual(client.requestedURLs, [url, url])
     }
 
+    func testLoaderReturnsExpectedErrorWhenClientFails() {
+
+        let client = HTTPSpyClient()
+        let loader = RemoteFeedLoader(url: .given, client: client)
+
+        client.didFail = true
+
+        loader.load { error in
+            XCTAssertEqual(error, .connectivity)
+        }
+    }
+
     private func makeSpyClientAndRemoteLoader(from url: URL) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
         let spyClient = HTTPSpyClient()
         let loader = RemoteFeedLoader(url: url, client: spyClient)
         return(spyClient, loader)
     }
+}
+
+
+private final class HTTPSpyClient: HTTPClient {
+    var requestedURLs: [URL?] = []
+    var didFail: Bool = false
+
+    func request(from url: URL, completion: (Error) -> Void) {
+        if didFail {
+            completion(NSError.test)
+        }
+
+        requestedURLs.append(url)
+    }
+}
+
+
+private extension URL {
+    static let given = URL(string: "http://a-given-url.com")!
+}
+
+private extension NSError {
+    static let test = NSError(domain: "test", code: 1)
 }
