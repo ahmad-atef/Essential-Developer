@@ -73,23 +73,25 @@ final class RemoteFeedLoaderTests: XCTestCase {
 }
 
 
-/// Just a Spy client (not Stub) without behaviour.
+/// A Spy client just to capture values 🙉 without behaviour.
 
 final class HTTPSpyClient: HTTPClient {
 
     typealias Completion = (Error) -> ()
+    typealias Message = (url: URL, completion: Completion)
 
-    var requestedURLs: [URL?] = []
-    var error: Error?
-    var completions: [Completion] = []
+    var requestedURLs: [URL?] {
+        messages.map { $0.url }
+    }
+
+    var messages: [Message] = []
 
     func request(from url: URL, completion: @escaping Completion) {
-        requestedURLs.append(url)
-        completions.append(completion)
+        messages.append((url, completion))
     }
 
     func complete(with error: Error, at index: Int = 0) {
-        completions[index](error)
+        messages[index].completion(error)
     }
 }
 
