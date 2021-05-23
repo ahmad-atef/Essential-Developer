@@ -21,7 +21,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
-        loader.load()
+        loader.load(completion: { _ in })
 
         XCTAssertEqual(client.requestedURLs, [url])
     }
@@ -30,7 +30,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
-        loader.load()
+        loader.load(completion: { _ in })
 
         XCTAssertEqual(client.requestedURLs.count, 1)
     }
@@ -39,8 +39,8 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
-        loader.load()
-        loader.load()
+        loader.load(completion: { _ in } )
+        loader.load(completion: { _ in } )
 
         XCTAssertEqual(client.requestedURLs.count, 2)
         XCTAssertEqual(client.requestedURLs, [url, url])
