@@ -6,7 +6,7 @@
 //
 
 public protocol HTTPClient {
-    func request(from url: URL, completion: @escaping (Error) -> Void)
+    func request(from url: URL, completion: @escaping (Result<Any, Error>) -> Void)
 }
 
 public final class RemoteFeedLoader {
@@ -14,6 +14,7 @@ public final class RemoteFeedLoader {
     /// Remote Feed Loader domain Errors.
     public enum Error: Swift.Error {
         case connectivity
+        case invalidData
     }
 
     private let url: URL
@@ -25,8 +26,13 @@ public final class RemoteFeedLoader {
     }
 
     public func load(completion: @escaping (RemoteFeedLoader.Error) -> Void) {
-        client.request(from: url) { error in
-            completion(.connectivity)
+        client.request(from: url) { result in
+            switch result {
+            case .success:
+                completion(.invalidData)
+            case .failure:
+                completion(.connectivity)
+            }
         }
     }
 }

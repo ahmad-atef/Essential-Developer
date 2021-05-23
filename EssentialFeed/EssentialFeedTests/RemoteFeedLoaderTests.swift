@@ -65,6 +65,36 @@ final class RemoteFeedLoaderTests: XCTestCase {
         XCTAssertEqual(capturedErrors, [.connectivity])
     }
 
+    func testReturnsInvalidDataError_When_ClientReturnsNon200Response() {
+
+        // Arrange
+        // Given
+        let url: URL = .given
+        let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
+
+        // Act
+        // When
+        [
+            199,
+            201,
+            400
+        ]
+        .enumerated()
+        .forEach { index, statusCode  in
+            var capturedErrors = [RemoteFeedLoader.Error]()
+            loader.load {
+                capturedErrors.append($0)
+            }
+
+            client.complete(with: statusCode, at: index)
+
+            // Assert
+            // Then
+            XCTAssertEqual(capturedErrors, [.invalidData])
+        }
+
+    }
+
     private func makeSpyClientAndRemoteLoader(from url: URL) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
         let spyClient = HTTPSpyClient()
         let loader = RemoteFeedLoader(url: url, client: spyClient)
@@ -74,13 +104,15 @@ final class RemoteFeedLoaderTests: XCTestCase {
 
 
 /// A Spy client just to capture values 🙉 without behaviour.
+/// A normal Client completes with Error, then the spy client
+/// should record that.
 
 final class HTTPSpyClient: HTTPClient {
 
-    typealias Completion = (Error) -> ()
+    typealias Completion = (Result<Any,Error>) -> ()
     typealias Message = (url: URL, completion: Completion)
 
-    var requestedURLs: [URL?] {
+    var requestedURLs: [URL] {
         messages.map { $0.url }
     }
 
@@ -91,7 +123,18 @@ final class HTTPSpyClient: HTTPClient {
     }
 
     func complete(with error: Error, at index: Int = 0) {
-        messages[index].completion(error)
+        messages[index].completion(.failure(error))
+    }
+
+    func complete(with statusCode: Int, at index: Int = 0) {
+
+        let response = HTTPURLResponse(
+            url: requestedURLs[index],
+            statusCode: statusCode,
+            httpVersion: nil,
+            headerFields: nil)!
+
+        messages[index].completion(.success(response))
     }
 }
 
