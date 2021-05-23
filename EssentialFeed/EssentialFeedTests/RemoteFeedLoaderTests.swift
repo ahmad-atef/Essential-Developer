@@ -58,7 +58,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         var capturedErrors = [RemoteFeedLoader.Error]()
         loader.load { capturedErrors.append($0) }
         let clientError = NSError.testing
-        client.completions[0](clientError)
+        client.complete(with: clientError)
 
         // Assert
         // Then
@@ -86,6 +86,10 @@ final class HTTPSpyClient: HTTPClient {
     func request(from url: URL, completion: @escaping Completion) {
         requestedURLs.append(url)
         completions.append(completion)
+    }
+
+    func complete(with error: Error, at index: Int = 0) {
+        completions[index](error)
     }
 }
 
