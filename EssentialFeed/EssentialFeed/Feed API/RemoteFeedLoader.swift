@@ -6,7 +6,7 @@
 //
 
 public protocol HTTPClient {
-    func request(from url: URL, completion: (Error) -> Void)
+    func request(from url: URL, completion: @escaping (Error) -> Void)
 }
 
 public final class RemoteFeedLoader {
@@ -24,7 +24,7 @@ public final class RemoteFeedLoader {
         self.client = client
     }
 
-    public func load(completion: (RemoteFeedLoader.Error) -> Void = { _ in }) {
+    public func load(completion: @escaping (RemoteFeedLoader.Error) -> Void = { _ in }) {
         client.request(from: url) { error in
             completion(.connectivity)
         }

@@ -51,12 +51,14 @@ final class RemoteFeedLoaderTests: XCTestCase {
         // Given
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
-        client.error = NSError.testing
+
 
         // Act
         // When
         var capturedErrors = [RemoteFeedLoader.Error]()
         loader.load { capturedErrors.append($0) }
+        let clientError = NSError.testing
+        client.completions[0](clientError)
 
         // Assert
         // Then
@@ -71,16 +73,19 @@ final class RemoteFeedLoaderTests: XCTestCase {
 }
 
 
+/// Just a Spy client (not Stub) without behaviour.
+
 final class HTTPSpyClient: HTTPClient {
+
+    typealias Completion = (Error) -> ()
 
     var requestedURLs: [URL?] = []
     var error: Error?
+    var completions: [Completion] = []
 
-    func request(from url: URL, completion: (Error) -> Void) {
-        if let error = error {
-            completion(error)
-        }
+    func request(from url: URL, completion: @escaping Completion) {
         requestedURLs.append(url)
+        completions.append(completion)
     }
 }
 
