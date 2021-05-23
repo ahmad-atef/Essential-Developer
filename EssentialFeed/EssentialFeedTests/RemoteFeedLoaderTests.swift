@@ -48,15 +48,18 @@ final class RemoteFeedLoaderTests: XCTestCase {
 
     func testLoaderReturnsExpectedErrorWhenClientFails() {
         // Arrange
+        // Given
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
         client.error = NSError.testing
 
         // Act
-        var capturedErrors: [RemoteFeedLoader.Error] = []
+        // When
+        var capturedErrors = [RemoteFeedLoader.Error]()
         loader.load { capturedErrors.append($0) }
 
         // Assert
+        // Then
         XCTAssertEqual(capturedErrors, [.connectivity])
     }
 
