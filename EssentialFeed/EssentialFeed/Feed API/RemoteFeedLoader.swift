@@ -6,7 +6,7 @@
 //
 
 public protocol HTTPClient {
-    func request(from url: URL, completion: @escaping (Result<Any, Error>) -> Void)
+    func request(from url: URL, completion: @escaping (Result<(Any,Any), Error>) -> Void)
 }
 
 public final class RemoteFeedLoader {

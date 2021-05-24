@@ -26,7 +26,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         XCTAssertEqual(client.requestedURLs, [url])
     }
 
-    func testOneLoadDoesNotLoadMoreThanOneTime() {
+    func test_load_doesNotRequestMoreThanOnce() {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
@@ -57,6 +57,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         // When
         var capturedErrors = [RemoteFeedLoader.Error]()
         loader.load { capturedErrors.append($0) }
+
         let clientError = NSError.testing
         client.complete(with: clientError)
 
@@ -81,20 +82,30 @@ final class RemoteFeedLoaderTests: XCTestCase {
         ]
         .enumerated()
         .forEach { index, statusCode  in
-            var capturedErrors = [RemoteFeedLoader.Error]()
-            loader.load {
-                capturedErrors.append($0)
-            }
+            var capturedErrors: RemoteFeedLoader.Error?
+            loader.load { capturedErrors = $0 }
 
             client.complete(with: statusCode, at: index)
 
             // Assert
             // Then
-            XCTAssertEqual(capturedErrors, [.invalidData])
+            XCTAssertEqual(capturedErrors, .invalidData)
         }
 
     }
 
+    func test_load_deliversErrorOn200ResponseWithInvalidJSON() {
+        let (client, sut) = makeSpyClientAndRemoteLoader(from: .given)
+
+        var error: RemoteFeedLoader.Error?
+
+        sut.load { error = $0 }
+
+        let data = Data(count: 2)
+        client.complete(with: 200, data: data)
+
+        XCTAssertEqual(error, .invalidData)
+    }
     private func makeSpyClientAndRemoteLoader(from url: URL) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
         let spyClient = HTTPSpyClient()
         let loader = RemoteFeedLoader(url: url, client: spyClient)
@@ -109,7 +120,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
 
 final class HTTPSpyClient: HTTPClient {
 
-    typealias Completion = (Result<Any,Error>) -> ()
+    typealias Completion = (Result<(Any, Any),Error>) -> ()
     typealias Message = (url: URL, completion: Completion)
 
     var requestedURLs: [URL] {
@@ -126,15 +137,14 @@ final class HTTPSpyClient: HTTPClient {
         messages[index].completion(.failure(error))
     }
 
-    func complete(with statusCode: Int, at index: Int = 0) {
+    func complete(with statusCode: Int, data: Data = Data(), at index: Int = 0) {
 
         let response = HTTPURLResponse(
             url: requestedURLs[index],
             statusCode: statusCode,
             httpVersion: nil,
             headerFields: nil)!
-
-        messages[index].completion(.success(response))
+        messages[index].completion(.success((data, response)))
     }
 }
 
