@@ -98,6 +98,18 @@ final class RemoteFeedLoaderTests: XCTestCase {
 
     }
 
+    func test_load_deliversNoItemOn200HTTPResponseWithEmptyJSONList() {
+        let (client, sut) = makeSpyClientAndRemoteLoader(from: .given)
+
+        var capturedResults = [LoaderResult]()
+        sut.load { capturedResults.append($0) }
+
+        let emptyJSON = Data("{\"items\":[]}".utf8)
+        client.complete(with: 200, data: emptyJSON)
+
+        XCTAssertEqual(capturedResults, [.success([])])
+    }
+
     private func makeSpyClientAndRemoteLoader(from url: URL) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
         let spyClient = HTTPSpyClient()
         let loader = RemoteFeedLoader(url: url, client: spyClient)
@@ -145,6 +157,7 @@ final class HTTPSpyClient: HTTPClient {
             statusCode: statusCode,
             httpVersion: nil,
             headerFields: nil)!
+
         messages[index].completion(.success((data, response)))
     }
 }

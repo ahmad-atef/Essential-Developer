@@ -6,7 +6,7 @@
 //
 
 public typealias ClientResult = Result<(Data,HTTPURLResponse), Error>
-public typealias LoaderResult = Result<FeedItem, RemoteFeedLoader.Error>
+public typealias LoaderResult = Result<[FeedItem], RemoteFeedLoader.Error>
 
 public protocol HTTPClient {
     func request(from url: URL, completion: @escaping (ClientResult) -> Void)
@@ -31,12 +31,19 @@ public final class RemoteFeedLoader {
     public func load(completion: @escaping (LoaderResult) -> Void) {
         client.request(from: url) { result in
             switch result {
-            case .success:
-                completion(.failure(.invalidData))
+            case .success((let data, _)):
+                data.isValidJSON ? completion(.success([])) : completion(.failure(.invalidData))
             case .failure:
                 completion(.failure(.connectivity))
             }
         }
+    }
+}
+
+private extension Data {
+    var isValidJSON: Bool {
+        guard (try? JSONSerialization.jsonObject(with: self)) != nil else { return false }
+        return true
     }
 }
 
