@@ -5,8 +5,11 @@
 //  Created by Ahmed Atef Ali Ahmed on 14.05.21.
 //
 
+public typealias ClientResult = Result<(Data,HTTPURLResponse), Error>
+public typealias LoaderResult = Result<FeedItem, RemoteFeedLoader.Error>
+
 public protocol HTTPClient {
-    func request(from url: URL, completion: @escaping (Result<(Any,Any), Error>) -> Void)
+    func request(from url: URL, completion: @escaping (ClientResult) -> Void)
 }
 
 public final class RemoteFeedLoader {
@@ -25,13 +28,13 @@ public final class RemoteFeedLoader {
         self.client = client
     }
 
-    public func load(completion: @escaping (RemoteFeedLoader.Error) -> Void) {
+    public func load(completion: @escaping (LoaderResult) -> Void) {
         client.request(from: url) { result in
             switch result {
             case .success:
-                completion(.invalidData)
+                completion(.failure(.invalidData))
             case .failure:
-                completion(.connectivity)
+                completion(.failure(.connectivity))
             }
         }
     }
