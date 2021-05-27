@@ -1,4 +1,4 @@
-struct FeedItem {
+public struct FeedItem: Equatable {
     let id: UUID
     let imageURL: URL
     let description: String?
