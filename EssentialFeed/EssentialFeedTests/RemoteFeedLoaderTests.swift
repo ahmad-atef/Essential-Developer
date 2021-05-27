@@ -104,15 +104,14 @@ final class RemoteFeedLoaderTests: XCTestCase {
         return(spyClient, loader)
     }
 
-    private func expect(_ sut: RemoteFeedLoader, toCompleteWithError error: RemoteFeedLoader.Error, on clientAction: () -> Void ) {
+    private func expect(_ sut: RemoteFeedLoader, toCompleteWithError error: RemoteFeedLoader.Error, on clientAction: () -> Void, file: StaticString = #filePath, line: UInt = #line ) {
 
-        var capturedErrors = [RemoteFeedLoader.Error]()
-        sut.load { capturedErrors.append($0) }
+        var capturedResults = [LoaderResult]()
+        sut.load { capturedResults.append($0) }
 
         clientAction()
 
-        XCTAssertEqual(capturedErrors, [error])
-
+        XCTAssertEqual(capturedResults, [.failure(error)], file: file, line: line)
     }
 }
 
@@ -123,8 +122,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
 
 final class HTTPSpyClient: HTTPClient {
 
-    typealias Completion = (Result<(Any, Any),Error>) -> ()
-    typealias Message = (url: URL, completion: Completion)
+    typealias Message = (url: URL, completion: (ClientResult) -> Void)
 
     var requestedURLs: [URL] {
         messages.map { $0.url }
@@ -132,7 +130,7 @@ final class HTTPSpyClient: HTTPClient {
 
     var messages: [Message] = []
 
-    func request(from url: URL, completion: @escaping Completion) {
+    func request(from url: URL, completion: @escaping (ClientResult) -> Void) {
         messages.append((url, completion))
     }
 
