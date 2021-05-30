@@ -75,7 +75,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         .forEach { index, statusCode  in
 
             expect(loader, toCompleteWithResult: .failure(.invalidData)) {
-                client.complete(with: statusCode, at: index)
+                client.complete(with: statusCode, data: .validEmptyJson, at: index)
             }
         }
     }
@@ -161,7 +161,7 @@ final class HTTPSpyClient: HTTPClient {
         messages[index].completion(.failure(error))
     }
 
-    func complete(with statusCode: Int, data: Data = Data(), at index: Int = 0) {
+    func complete(with statusCode: Int, data: Data, at index: Int = 0) {
 
         let response = HTTPURLResponse(
             url: requestedURLs[index],
