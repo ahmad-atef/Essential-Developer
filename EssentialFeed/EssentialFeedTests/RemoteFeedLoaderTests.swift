@@ -52,7 +52,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
-        expect(loader, toCompleteWithError: .connectivity) {
+        expect(loader, toCompleteWithResult: .failure(.connectivity)) {
             client.complete(with: NSError.testing)
         }
     }
@@ -74,7 +74,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         .enumerated()
         .forEach { index, statusCode  in
 
-            expect(loader, toCompleteWithError: .invalidData) {
+            expect(loader, toCompleteWithResult: .failure(.invalidData)) {
                 client.complete(with: statusCode, at: index)
             }
         }
@@ -91,7 +91,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
             .enumerated()
             .forEach { index, data in
                 
-                expect(sut, toCompleteWithError: .invalidData) {
+                expect(sut, toCompleteWithResult: .failure(.invalidData)) {
                     client.complete(with: 200, data: data, at: index)
                 }
         }
@@ -104,26 +104,27 @@ final class RemoteFeedLoaderTests: XCTestCase {
         var capturedResults = [LoaderResult]()
         sut.load { capturedResults.append($0) }
 
-        let emptyJSON = Data("{\"items\":[]}".utf8)
+        let emptyJSON: Data = .validEmptyJson
         client.complete(with: 200, data: emptyJSON)
 
         XCTAssertEqual(capturedResults, [.success([])])
     }
 
+    // MARK: Helper methods
     private func makeSpyClientAndRemoteLoader(from url: URL) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
         let spyClient = HTTPSpyClient()
         let loader = RemoteFeedLoader(url: url, client: spyClient)
         return(spyClient, loader)
     }
 
-    private func expect(_ sut: RemoteFeedLoader, toCompleteWithError error: RemoteFeedLoader.Error, on clientAction: () -> Void, file: StaticString = #filePath, line: UInt = #line ) {
+    private func expect(_ sut: RemoteFeedLoader, toCompleteWithResult result: LoaderResult, on clientAction: () -> Void, file: StaticString = #filePath, line: UInt = #line ) {
 
         var capturedResults = [LoaderResult]()
         sut.load { capturedResults.append($0) }
 
         clientAction()
 
-        XCTAssertEqual(capturedResults, [.failure(error)], file: file, line: line)
+        XCTAssertEqual(capturedResults, [result], file: file, line: line)
     }
 }
 
@@ -168,4 +169,8 @@ private extension URL {
 
 private extension NSError {
     static let testing = NSError(domain: "test", code: 0)
+}
+
+private extension Data {
+    static let validEmptyJson = Data("{\"items\":[]}".utf8)
 }
