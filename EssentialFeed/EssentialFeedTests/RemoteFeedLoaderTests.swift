@@ -100,14 +100,24 @@ final class RemoteFeedLoaderTests: XCTestCase {
 
     func test_load_deliversNoItemOn200HTTPResponseWithEmptyJSONList() {
         let (client, sut) = makeSpyClientAndRemoteLoader(from: .given)
+        expect(sut, toCompleteWithResult: .success([])) {
+            client.complete(with: 200, data: .validEmptyJson)
+        }
+    }
 
-        var capturedResults = [LoaderResult]()
-        sut.load { capturedResults.append($0) }
+    func test_load_deliversItemsOn200HTTPResponseWithJsonItems() {
+        let (client, sut) = makeSpyClientAndRemoteLoader(from: .given)
 
-        let emptyJSON: Data = .validEmptyJson
-        client.complete(with: 200, data: emptyJSON)
+        let itemsJSON = [
+            "items": [RemoteFeedLoaderTests.itemJSONWithIDAndImageOnly,
+                      RemoteFeedLoaderTests.itemJSONWithAllProperties]
+        ]
 
-        XCTAssertEqual(capturedResults, [.success([])])
+        let JSON = try! JSONSerialization.data(withJSONObject: itemsJSON)
+
+        expect(sut, toCompleteWithResult: .success([.withIDAndImageOnly, .withAllProperties])) {
+            client.complete(with: 200, data: JSON)
+        }
     }
 
     // MARK: Helper methods
@@ -173,4 +183,31 @@ private extension NSError {
 
 private extension Data {
     static let validEmptyJson = Data("{\"items\":[]}".utf8)
+    static let jsonWithItems = Data("{\"items\": [] }".utf8)
+}
+
+private extension FeedItem {
+    static let withIDAndImageOnly = FeedItem(
+        id: UUID(),
+        imageURL: .given)
+
+    static let withAllProperties = FeedItem(
+        id: UUID(),
+        imageURL: .given,
+        description: "a description",
+        location: "a location")
+}
+
+private extension RemoteFeedLoaderTests {
+    static let itemJSONWithIDAndImageOnly = [
+        "id": FeedItem.withIDAndImageOnly.id.uuidString,
+        "image": FeedItem.withIDAndImageOnly.imageURL.absoluteString
+    ]
+
+    static let itemJSONWithAllProperties = [
+        "id": FeedItem.withAllProperties.id.uuidString,
+        "description": FeedItem.withAllProperties.description,
+        "location": FeedItem.withAllProperties.location,
+        "image" : FeedItem.withAllProperties.imageURL.absoluteString,
+    ]
 }
