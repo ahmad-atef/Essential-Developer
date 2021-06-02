@@ -34,7 +34,7 @@ public final class RemoteFeedLoader {
             case .success((let data, let response)):
                 if response.statusCode == 200,
                    let root = try? JSONDecoder().decode(Root.self, from: data){
-                    completion(.success(root.items))
+                    completion(.success(root.items.map { $0.item }))
                 } else {
                     completion(.failure(.invalidData))
                 }
@@ -47,5 +47,26 @@ public final class RemoteFeedLoader {
 
 
 private struct Root: Decodable {
-    let items: [FeedItem]
+    let items: [Item]
+}
+
+// Separate module that represents the API version of the FeedItem 👌🤩
+// and keep that key path knowledge in that domain
+// then you can convert it into the general shared module FeedItem
+
+/// Transitional representation of FeedItem that specific of the API module.
+private struct Item: Decodable {
+    private let id: UUID
+    private let description: String?
+    private let location: String?
+    private let image: URL
+
+    var item: FeedItem {
+        .init(
+            id: id,
+            description: description,
+            location: location,
+            imageURL: image
+        )
+    }
 }
