@@ -75,33 +75,31 @@ final class RemoteFeedLoaderTests: XCTestCase {
         .forEach { index, statusCode  in
 
             expect(loader, toCompleteWithResult: .failure(.invalidData)) {
-                client.complete(with: statusCode, data: .validEmptyJson, at: index)
+                let itemJSON = makeItemJSON([])
+                client.complete(with: statusCode, data: itemJSON, at: index)
             }
         }
     }
 
     func test_load_deliversErrorOn200ResponseWithInvalidJSON() {
         let (client, sut) = makeSpyClientAndRemoteLoader(from: .given)
-
-        let data = Data(count: 2)
-        let invalidJson = Data("Invalid JSON".utf8)
-
-
-        [data, invalidJson]
-            .enumerated()
-            .forEach { index, data in
-                
-                expect(sut, toCompleteWithResult: .failure(.invalidData)) {
-                    client.complete(with: 200, data: data, at: index)
-                }
+        [
+            Data(count: 2),
+            Data("Invalid JSON".utf8)
+        ]
+        .enumerated()
+        .forEach { index, data in
+            expect(sut, toCompleteWithResult: .failure(.invalidData)) {
+                client.complete(with: 200, data: data, at: index)
+            }
         }
-
     }
 
     func test_load_deliversNoItemOn200HTTPResponseWithEmptyJSONList() {
         let (client, sut) = makeSpyClientAndRemoteLoader(from: .given)
         expect(sut, toCompleteWithResult: .success([])) {
-            client.complete(with: 200, data: .validEmptyJson)
+            let itemJSON = makeItemJSON([])
+            client.complete(with: 200, data: itemJSON)
         }
     }
 
@@ -119,7 +117,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
             location: "a location")
 
         let expectedItems = [item1.model, item2.model]
-        
+
         expect(sut, toCompleteWithResult: .success(expectedItems)) {
             let itemJSON = makeItemJSON([item1.json, item2.json])
             client.complete(with: 200, data: itemJSON)
@@ -210,9 +208,4 @@ private extension URL {
 
 private extension NSError {
     static let testing = NSError(domain: "test", code: 0)
-}
-
-private extension Data {
-    static let validEmptyJson = Data("{\"items\":[]}".utf8)
-    static let jsonWithItems = Data("{\"items\": [] }".utf8)
 }
