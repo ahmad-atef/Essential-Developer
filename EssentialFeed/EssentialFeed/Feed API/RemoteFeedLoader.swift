@@ -44,13 +44,6 @@ public final class RemoteFeedLoader {
     }
 }
 
-private extension Data {
-    var isValidJSON: Bool {
-        guard (try? JSONSerialization.jsonObject(with: self)) != nil else { return false }
-        return true
-    }
-}
-
 
 private struct Root: Decodable {
     let items: [FeedItem]

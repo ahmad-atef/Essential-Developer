@@ -1,6 +1,6 @@
 public struct FeedItem: Equatable {
 
-    public init(id: UUID, imageURL: URL, description: String? = nil, location: String? = nil) {
+    public init(id: UUID, imageURL: URL, description: String?, location: String?) {
         self.id = id
         self.imageURL = imageURL
         self.description = description
@@ -18,6 +18,8 @@ extension FeedItem: Decodable {
         case id
         case location
         case description
-        case imageURL = "image"
+        case imageURL = "image" // API detail leaking in the module
+        // the module should be agnostic about the API module.
+        // If we keep the knowledge of the key path in the FeedItem module, maybe we will break another module, like data base loader.
     }
 }

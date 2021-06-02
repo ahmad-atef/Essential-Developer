@@ -108,15 +108,21 @@ final class RemoteFeedLoaderTests: XCTestCase {
     func test_load_deliversItemsOn200HTTPResponseWithJsonItems() {
         let (client, sut) = makeSpyClientAndRemoteLoader(from: .given)
 
-        let itemsJSON = [
-            "items": [RemoteFeedLoaderTests.itemJSONWithIDAndImageOnly,
-                      RemoteFeedLoaderTests.itemJSONWithAllProperties]
-        ]
+        let item1 = makeItemAndBuildJSON(
+            id: UUID(),
+            imageURL: .given)
 
-        let JSON = try! JSONSerialization.data(withJSONObject: itemsJSON)
+        let item2 = makeItemAndBuildJSON(
+            id: UUID(),
+            imageURL: .given,
+            description: "a description",
+            location: "a location")
 
-        expect(sut, toCompleteWithResult: .success([.withIDAndImageOnly, .withAllProperties])) {
-            client.complete(with: 200, data: JSON)
+        let expectedItems = [item1.model, item2.model]
+        
+        expect(sut, toCompleteWithResult: .success(expectedItems)) {
+            let itemJSON = makeItemJSON([item1.json, item2.json])
+            client.complete(with: 200, data: itemJSON)
         }
     }
 
@@ -135,6 +141,31 @@ final class RemoteFeedLoaderTests: XCTestCase {
         clientAction()
 
         XCTAssertEqual(capturedResults, [result], file: file, line: line)
+    }
+
+    private func makeItemAndBuildJSON(id: UUID, imageURL: URL, description: String? = nil, location: String? = nil) -> (model: FeedItem, json: [String: Any]) {
+        let item = FeedItem(
+            id: id,
+            imageURL: imageURL,
+            description: description,
+            location: location)
+
+        let json = [
+            "id": id.uuidString,
+            "description": description,
+            "location": location,
+            "image": imageURL.absoluteString
+        ].reduce(into: [String: Any]()) { acc, element in
+            if let value = element.value {
+                acc[element.key] = value
+            }
+        }
+        return (item, json)
+    }
+
+    private func makeItemJSON(_ items: [[String : Any]]) -> Data {
+        let json = ["items": items]
+        return try! JSONSerialization.data(withJSONObject: json)
     }
 }
 
@@ -184,30 +215,4 @@ private extension NSError {
 private extension Data {
     static let validEmptyJson = Data("{\"items\":[]}".utf8)
     static let jsonWithItems = Data("{\"items\": [] }".utf8)
-}
-
-private extension FeedItem {
-    static let withIDAndImageOnly = FeedItem(
-        id: UUID(),
-        imageURL: .given)
-
-    static let withAllProperties = FeedItem(
-        id: UUID(),
-        imageURL: .given,
-        description: "a description",
-        location: "a location")
-}
-
-private extension RemoteFeedLoaderTests {
-    static let itemJSONWithIDAndImageOnly = [
-        "id": FeedItem.withIDAndImageOnly.id.uuidString,
-        "image": FeedItem.withIDAndImageOnly.imageURL.absoluteString
-    ]
-
-    static let itemJSONWithAllProperties = [
-        "id": FeedItem.withAllProperties.id.uuidString,
-        "description": FeedItem.withAllProperties.description,
-        "location": FeedItem.withAllProperties.location,
-        "image" : FeedItem.withAllProperties.imageURL.absoluteString,
-    ]
 }
