@@ -32,11 +32,15 @@ public final class RemoteFeedLoader {
         client.request(from: url) { result in
             switch result {
             case .success((let data, let response)):
-                if response.statusCode == 200,
-                   let root = try? JSONDecoder().decode(Root.self, from: data){
-                    completion(.success(root.items.map { $0.item }))
-                } else {
+                do {
+                    let result = try FeedItemMapper.map(data, response)
+                    completion(.success(result))
+                } catch RemoteFeedLoader.Error.connectivity {
+                    completion(.failure(.connectivity))
+                } catch RemoteFeedLoader.Error.invalidData {
                     completion(.failure(.invalidData))
+                } catch {
+                    preconditionFailure("Unexpected error!")
                 }
             case .failure:
                 completion(.failure(.connectivity))
@@ -45,6 +49,18 @@ public final class RemoteFeedLoader {
     }
 }
 
+class FeedItemMapper {
+
+    static let OK_200: Int = 200
+
+    static func map (_ data: Data, _ response: HTTPURLResponse) throws -> [FeedItem] {
+        guard response.statusCode == OK_200 else {
+            throw RemoteFeedLoader.Error.invalidData
+        }
+        let root = try JSONDecoder().decode(Root.self, from: data)
+        return root.items.map { $0.item }
+    }
+}
 
 private struct Root: Decodable {
     let items: [Item]
@@ -56,10 +72,10 @@ private struct Root: Decodable {
 
 /// Transitional representation of FeedItem that specific of the API module.
 private struct Item: Decodable {
-    private let id: UUID
-    private let description: String?
-    private let location: String?
-    private let image: URL
+    let id: UUID
+    let description: String?
+    let location: String?
+    let image: URL
 
     var item: FeedItem {
         .init(
