@@ -5,12 +5,7 @@
 //  Created by Ahmed Atef Ali Ahmed on 14.05.21.
 //
 
-public typealias ClientResult = Result<(Data,HTTPURLResponse), Error>
 public typealias LoaderResult = Result<[FeedItem], RemoteFeedLoader.Error>
-
-public protocol HTTPClient {
-    func request(from url: URL, completion: @escaping (ClientResult) -> Void)
-}
 
 public final class RemoteFeedLoader {
 
