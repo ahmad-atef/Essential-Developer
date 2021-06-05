@@ -124,6 +124,22 @@ final class RemoteFeedLoaderTests: XCTestCase {
         }
     }
 
+    func test_load_doesNotDeliverResultAfterSUTHasBeenDeallocated() {
+        let client = HTTPSpyClient()
+        var sut: RemoteFeedLoader? = RemoteFeedLoader(url: .given, client: client)
+
+        var capturedResult = [LoaderResult]()
+
+        sut?.load(completion: { result in
+            capturedResult.append(result)
+        })
+
+        sut = nil
+        client.complete(with: 200, data: makeItemJSON([]))
+
+        XCTAssertTrue(capturedResult.isEmpty)
+    }
+
     // MARK: Helper methods
     // We need to make sure that the load and the client is deallocated after the test has finished,
     // we want to simulate the real life production scenario, where we expect that the client and loader
