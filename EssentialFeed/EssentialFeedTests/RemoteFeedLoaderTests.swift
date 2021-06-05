@@ -125,10 +125,23 @@ final class RemoteFeedLoaderTests: XCTestCase {
     }
 
     // MARK: Helper methods
-    private func makeSpyClientAndRemoteLoader(from url: URL) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
+    // We need to make sure that the load and the client is deallocated after the test has finished,
+    // we want to simulate the real life production scenario, where we expect that the client and loader
+    // should be removed from memory after usage.
+    private func makeSpyClientAndRemoteLoader(from url: URL, file: StaticString = #filePath, line: UInt = #line) -> (client: HTTPSpyClient, loader: RemoteFeedLoader) {
         let spyClient = HTTPSpyClient()
         let loader = RemoteFeedLoader(url: url, client: spyClient)
+        
+        trackForMemoryLeaks(spyClient)
+        trackForMemoryLeaks(loader)
+
         return(spyClient, loader)
+    }
+
+    private func trackForMemoryLeaks(_ object: AnyObject, file: StaticString = #filePath, line: UInt = #line) {
+        addTeardownBlock { [weak object] in
+            XCTAssertNil(object, "Instance should have been allocated, potential memory leak! 🤡", file: file, line: line)
+        }
     }
 
     private func expect(_ sut: RemoteFeedLoader, toCompleteWithResult result: LoaderResult, on clientAction: () -> Void, file: StaticString = #filePath, line: UInt = #line ) {

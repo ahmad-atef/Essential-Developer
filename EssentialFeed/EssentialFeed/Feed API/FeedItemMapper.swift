@@ -5,11 +5,9 @@
 //  Created by Ahmed Atef Ali Ahmed on 04.06.21.
 //
 
-import Foundation
-
 final class FeedItemMapper {
 
-    static let OK_200: Int = 200
+    private static let OK_200: Int = 200
 
     static func map (_ data: Data, _ response: HTTPURLResponse) throws -> [FeedItem] {
         guard response.statusCode == OK_200 else {
