@@ -5,7 +5,6 @@
 //  Created by Ahmed Atef Ali Ahmed on 14.05.21.
 //
 
-
 public final class RemoteFeedLoader: FeedLoader {
 
     /// Remote Feed Loader domain Errors.
