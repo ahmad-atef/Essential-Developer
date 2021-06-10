@@ -5,9 +5,8 @@
 //  Created by Ahmed Atef Ali Ahmed on 14.05.21.
 //
 
-public typealias LoaderResult = Result<[FeedItem], RemoteFeedLoader.Error>
 
-public final class RemoteFeedLoader {
+public final class RemoteFeedLoader: FeedLoader {
 
     /// Remote Feed Loader domain Errors.
     public enum Error: Swift.Error {
@@ -24,14 +23,14 @@ public final class RemoteFeedLoader {
     }
 
 
-    public func load(completion: @escaping (LoaderResult) -> Void) {
+    public func loadFeed(completion: @escaping (FeedLoaderResult) -> Void) {
         client.request(from: url) { [weak self] result in
             guard let _ = self else { return }
             switch result {
             case .success((let data, let response)):
                 completion(FeedItemMapper.map(data, response))
             case .failure:
-                completion(.failure(.connectivity))
+                completion(.failure(RemoteFeedLoader.Error.connectivity))
             }
         }
     }

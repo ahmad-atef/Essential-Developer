@@ -21,7 +21,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
-        loader.load(completion: { _ in })
+        loader.loadFeed(completion: { _ in })
 
         XCTAssertEqual(client.requestedURLs, [url])
     }
@@ -30,7 +30,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
-        loader.load(completion: { _ in })
+        loader.loadFeed(completion: { _ in })
 
         XCTAssertEqual(client.requestedURLs.count, 1)
     }
@@ -39,8 +39,8 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
-        loader.load(completion: { _ in } )
-        loader.load(completion: { _ in } )
+        loader.loadFeed(completion: { _ in } )
+        loader.loadFeed(completion: { _ in } )
 
         XCTAssertEqual(client.requestedURLs.count, 2)
         XCTAssertEqual(client.requestedURLs, [url, url])
@@ -52,7 +52,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let url: URL = .given
         let (client, loader) = makeSpyClientAndRemoteLoader(from:url)
 
-        expect(loader, toCompleteWithResult: .failure(.connectivity)) {
+        expect(loader, toCompleteWithResult: .failure(RemoteFeedLoader.Error.connectivity)) {
             client.complete(with: NSError.testing)
         }
     }
@@ -74,7 +74,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         .enumerated()
         .forEach { index, statusCode  in
 
-            expect(loader, toCompleteWithResult: .failure(.invalidData)) {
+            expect(loader, toCompleteWithResult: .failure(RemoteFeedLoader.Error.invalidData)) {
                 let itemJSON = makeItemJSON([])
                 client.complete(with: statusCode, data: itemJSON, at: index)
             }
@@ -89,7 +89,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         ]
         .enumerated()
         .forEach { index, data in
-            expect(sut, toCompleteWithResult: .failure(.invalidData)) {
+            expect(sut, toCompleteWithResult: .failure(RemoteFeedLoader.Error.invalidData)) {
                 client.complete(with: 200, data: data, at: index)
             }
         }
@@ -128,9 +128,9 @@ final class RemoteFeedLoaderTests: XCTestCase {
         let client = HTTPSpyClient()
         var sut: RemoteFeedLoader? = RemoteFeedLoader(url: .given, client: client)
 
-        var capturedResult = [LoaderResult]()
+        var capturedResult = [FeedLoaderResult]()
 
-        sut?.load(completion: { result in
+        sut?.loadFeed(completion: { result in
             capturedResult.append(result)
         })
 
@@ -160,10 +160,10 @@ final class RemoteFeedLoaderTests: XCTestCase {
         }
     }
 
-    private func expect(_ sut: RemoteFeedLoader, toCompleteWithResult result: LoaderResult, on clientAction: () -> Void, file: StaticString = #filePath, line: UInt = #line ) {
+    private func expect(_ sut: RemoteFeedLoader, toCompleteWithResult result: FeedLoaderResult, on clientAction: () -> Void, file: StaticString = #filePath, line: UInt = #line ) {
 
-        var capturedResults = [LoaderResult]()
-        sut.load { capturedResults.append($0) }
+        var capturedResults = [FeedLoaderResult]()
+        sut.loadFeed { capturedResults.append($0) }
 
         clientAction()
 
