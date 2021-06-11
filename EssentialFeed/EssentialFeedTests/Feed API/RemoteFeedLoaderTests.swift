@@ -218,6 +218,8 @@ final class RemoteFeedLoaderTests: XCTestCase {
 
 final class HTTPSpyClient: HTTPClient {
 
+    // logger for the spy, just logging the messages as a key URL and a value completion client result.
+    // as a result for that request.
     typealias Message = (url: URL, completion: (ClientResult) -> Void)
 
     var requestedURLs: [URL] {
