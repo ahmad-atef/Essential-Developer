@@ -5,11 +5,7 @@
 //  Created by Ahmed Atef Ali Ahmed on 14.05.21.
 //
 
-public protocol HTTPClient {
-    func request(from url: URL, completion: @escaping (Result<Any, Error>) -> Void)
-}
-
-public final class RemoteFeedLoader {
+public final class RemoteFeedLoader: FeedLoader {
 
     /// Remote Feed Loader domain Errors.
     public enum Error: Swift.Error {
@@ -25,16 +21,16 @@ public final class RemoteFeedLoader {
         self.client = client
     }
 
-    public func load(completion: @escaping (RemoteFeedLoader.Error) -> Void) {
-        client.request(from: url) { result in
+
+    public func loadFeed(completion: @escaping (FeedLoaderResult) -> Void) {
+        client.request(from: url) { [weak self] result in
+            guard let _ = self else { return }
             switch result {
-            case .success:
-                completion(.invalidData)
+            case .success((let data, let response)):
+                completion(FeedItemMapper.map(data, response))
             case .failure:
-                completion(.connectivity)
+                completion(.failure(RemoteFeedLoader.Error.connectivity))
             }
         }
     }
 }
-
-
