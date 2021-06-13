@@ -23,8 +23,12 @@ class RemoteClient {
         self.session = session
     }
 
-    func get(from url: URL) {
-        session.dataTask(with: url) { _, _, _ in }.resume()
+    func get(from url: URL, completion: @escaping (ClientResult) -> Void ) {
+        session.dataTask(with: url) { _, _, error in
+            if let error = error {
+                completion(.failure(error))
+            }
+        }.resume()
     }
 
 }
@@ -36,7 +40,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let sut = RemoteClient(session: session)
         let url = URL(string: "http://any-url.com")!
 
-        sut.get(from: url)
+        sut.get(from: url, completion: { _ in })
 
         XCTAssertEqual(session.requestURLs, [url])
     }
@@ -46,13 +50,39 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let url = URL(string: "http://any-url.com")!
         let session = SpySession()
         let task = SpySessionDataTask() // We need another wat... Spy 😼
-        session.stub(url: url, task: task)
+        session.stub(url: url, stub: .init(task: task))
 
         let sut = RemoteClient(session: session)
 
-        sut.get(from: url)
+        sut.get(from: url, completion: { _ in })
 
         XCTAssertEqual(task.resumedCallCount, 1)
+    }
+
+    func test_getFromURL_failsOnRequestError() {
+        let url = URL(string: "http://given-url.com")!
+        let session = SpySession()
+        let task = SpySessionDataTask()
+        let expectedError = NSError(domain: "", code: 0, userInfo: nil)
+        session.stub(url: url, stub: .init(task: task, error: expectedError))
+
+        let sut = RemoteClient(session: session)
+
+        let exp = expectation(description: "Wait for completion")
+        sut.get(from: url, completion: { result in
+
+            switch result {
+            case let .failure(error as NSError):
+                XCTAssertEqual(error, expectedError)
+            default:
+                XCTFail("")
+            }
+
+            exp.fulfill()
+        })
+
+
+        wait(for: [exp], timeout: 1.0)
     }
 }
 
@@ -64,14 +94,29 @@ private class SpySession: URLSession {
     var requestURLs = [URL]()
     var dataTask: URLSessionDataTask?
 
-    var messages = [URL: SpySessionDataTask]()
+    struct Stub {
+        let task: URLSessionDataTask
+        let error: NSError?
 
-    func stub(url: URL, task: SpySessionDataTask) {
-        messages[url] = task
+        init(task: URLSessionDataTask, error: NSError? = nil) {
+            self.task = task
+            self.error = error
+        }
     }
+
+    var messages = [URL: Stub]()
+
+    func stub(url: URL, stub: Stub) {
+        messages[url] = stub
+    }
+
     override func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
         requestURLs.append(url)
-        return messages[url] ?? FakeURLSessionDataTask()
+        guard let stub = messages[url] else {
+            fatalError("Couldn't find Stub")
+        }
+        completionHandler(nil, nil, stub.error)
+        return stub.task
     }
 }
 
