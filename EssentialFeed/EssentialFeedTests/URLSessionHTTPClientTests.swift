@@ -17,9 +17,9 @@ import EssentialFeed
 // So Client has a Session 😉
 
 class RemoteClient {
-    private let session: URLSession
+    private let session: HTTPSession
 
-    init(session: URLSession) {
+    init(session: HTTPSession) {
         self.session = session
     }
 
@@ -32,19 +32,33 @@ class RemoteClient {
     }
 
 }
+
+/// Protocol Based Mocking
+// its pretty common to copy the methods from the framework, and create a protocol out of it 😼
+protocol HTTPSession {
+    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> HTTPDataTask
+}
+
+protocol HTTPDataTask {
+    func resume()
+}
+
 final class URLSessionHTTPClientTests: XCTestCase {
 
+    // Create Test
     // test_sessionRequestsCorrectURLPassedFromClient
     func test_getFromURL_createsDataTaskWithURL() {
         let session = SpySession()
         let sut = RemoteClient(session: session)
         let url = URL(string: "http://any-url.com")!
-
+        let task = FakeURLSessionDataTask()
+        session.stub(url: url, stub: SpySession.Stub(task: task))
         sut.get(from: url, completion: { _ in })
 
         XCTAssertEqual(session.requestURLs, [url])
     }
 
+    // Resume Test
     // same approach, but we can spy on the data task now 😺
     func test_getFromURL_resumesDataTaskWithURL() {
         let url = URL(string: "http://any-url.com")!
@@ -59,7 +73,9 @@ final class URLSessionHTTPClientTests: XCTestCase {
         XCTAssertEqual(task.resumedCallCount, 1)
     }
 
-    func test_getFromURL_failsOnRequestError() {
+    // Fail Test
+    func test_getFromURL_failsWithExpectedErrorOnRequestError() {
+
         let url = URL(string: "http://given-url.com")!
         let session = SpySession()
         let task = SpySessionDataTask()
@@ -90,27 +106,27 @@ final class URLSessionHTTPClientTests: XCTestCase {
 // Spy for the session, that will be injected to the client (SUT)
 // The main function here is the dataTask(with url), which returns a URLSessionDataTask instance
 // So we need a fake URLSessionDataTask 😼 (aka: DataTask)
-private class SpySession: URLSession {
+private class SpySession: HTTPSession {
     var requestURLs = [URL]()
-    var dataTask: URLSessionDataTask?
+    var dataTask: HTTPDataTask?
 
     struct Stub {
-        let task: URLSessionDataTask
+        let task: HTTPDataTask
         let error: NSError?
 
-        init(task: URLSessionDataTask, error: NSError? = nil) {
+        init(task: HTTPDataTask, error: NSError? = nil) {
             self.task = task
             self.error = error
         }
     }
 
-    var messages = [URL: Stub]()
+    var messages = [URL: Stub]() // like a logger 🪵
 
-    func stub(url: URL, stub: Stub) {
+    func stub(url: URL, stub: Stub) { // shortcut to mock wanted behaviour 😉
         messages[url] = stub
     }
 
-    override func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
+    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> HTTPDataTask {
         requestURLs.append(url)
         guard let stub = messages[url] else {
             fatalError("Couldn't find Stub")
@@ -120,14 +136,14 @@ private class SpySession: URLSession {
     }
 }
 
-private class FakeURLSessionDataTask: URLSessionDataTask {
-    override func resume() {}
+private class FakeURLSessionDataTask: HTTPDataTask {
+    func resume() {}
 }
 
-private class SpySessionDataTask: URLSessionDataTask {
+private class SpySessionDataTask: HTTPDataTask {
     var resumedCallCount: Int = 0
 
-    override func resume() {
+    func resume() {
         resumedCallCount += 1
     }
 }
