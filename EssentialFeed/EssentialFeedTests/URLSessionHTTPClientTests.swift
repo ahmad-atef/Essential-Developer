@@ -8,13 +8,17 @@
 import XCTest
 import EssentialFeed
 
+
 // So the production implementation for Client, would be a real request for the API.
 // We need to be able to test it first because we don't have API yet 🤗
 // What will happen at the end of the day is a URLSession -> DataTaskWith(url) request, that return a completion block.
 // So the RemoteClient will have the Session that do that ☝️
 // And will have an API method get(from url) that will be the window to shot for the request.
-
 // So Client has a Session 😉
+
+//Test behaviour, not framework (production) details
+// So you free the production from any testing constrains 🆓
+// Implement and maintain Only what you care about 👌
 
 class RemoteClient {
     private let session: HTTPSession
@@ -70,7 +74,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
 
         sut.get(from: url, completion: { _ in })
 
-        XCTAssertEqual(task.resumedCallCount, 1)
+        XCTAssertEqual(task.resumedCallCount, 1) // production details, specific framework details, we shouldn't be testing that 🥲
     }
 
     // Fail Test
