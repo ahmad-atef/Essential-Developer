@@ -43,10 +43,10 @@ final class URLSessionHTTPClientTests: XCTestCase {
     // Fail Test
     func test_getFromURL_failsWithExpectedErrorOnRequestError() {
 
-        URLProtocol.registerClass(URLProtocolStub.self)
+
         let url = URL(string: "http://given-url.com")!
         let expectedError = NSError(domain: "any error", code: 1)
-        URLProtocolStub.stub(url: url, stub: .init(error: expectedError))
+        URLProtocolStub.stub(url: url, data: nil, response: nil, error: expectedError)
 
         let sut = RemoteClient()
 
@@ -87,15 +87,28 @@ final class URLSessionHTTPClientTests: XCTestCase {
 private class URLProtocolStub: URLProtocol {
 
     struct Stub {
+        let data: Data?
+        let response: URLResponse?
         let error: NSError?
-        init(error: NSError? = nil) {
+
+        init(data: Data?, response:URLResponse?, error: NSError? = nil) {
+            self.data = data
+            self.response = response
             self.error = error
         }
     }
     static var messages = [URL: Stub]() // like a logger 🪵 [ "http://a-given-url.com": stubObject ]
+    static func stub(url: URL, data: Data?, response: URLResponse?, error: NSError?) { // shortcut to mock wanted behaviour 😉
+        messages[url] = Stub(data: data, response: response, error: error)
+    }
 
-    static func stub(url: URL, stub: Stub) { // shortcut to mock wanted behaviour 😉
-        messages[url] = stub
+    static func startInterceptingRequests(){
+        URLProtocol.registerClass(self)
+    }
+
+    static func stopInterceptingRequest() {
+        URLProtocol.unregisterClass(self)
+        messages = [:]
     }
 
     override class func canInit(with request: URLRequest) -> Bool {
@@ -111,11 +124,16 @@ private class URLProtocolStub: URLProtocol {
         guard let url = request.url else {
             return
         }
-        if let error = URLProtocolStub.messages[url]?.error {
-            client?.urlProtocol(self, didFailWithError: error)
-        } else {
-            client?.urlProtocolDidFinishLoading(self)
+        if let data = URLProtocolStub.messages[url]?.data {
+            client?.urlProtocol(self, didLoad: data)
         }
+        if let response = URLProtocolStub.messages[url]?.response {
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        }
+        else if let error = URLProtocolStub.messages[url]?.error {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+        client?.urlProtocolDidFinishLoading(self)
     }
 
     override func stopLoading() { }
