@@ -28,6 +28,7 @@ class RemoteClient {
     }
 
     func get(from url: URL, completion: @escaping (ClientResult) -> Void ) {
+        let url = URL(string: "http://a-wrong-url.com")!
         session.dataTask(with: url) { _, _, error in
             if let error = error {
                 completion(.failure(error))
@@ -43,10 +44,10 @@ final class URLSessionHTTPClientTests: XCTestCase {
     // Fail Test
     func test_getFromURL_failsWithExpectedErrorOnRequestError() {
 
-
+        URLProtocolStub.startInterceptingRequests()
         let url = URL(string: "http://given-url.com")!
         let expectedError = NSError(domain: "any error", code: 1)
-        URLProtocolStub.stub(url: url, data: nil, response: nil, error: expectedError)
+        URLProtocolStub.stub(data: nil, response: nil, error: expectedError)
 
         let sut = RemoteClient()
 
@@ -59,13 +60,10 @@ final class URLSessionHTTPClientTests: XCTestCase {
             default:
                 XCTFail("")
             }
-
             exp.fulfill()
         })
-
-
         wait(for: [exp], timeout: 1.0)
-        URLProtocol.unregisterClass(URLProtocolStub.self)
+        URLProtocolStub.stopInterceptingRequest()
     }
 }
 
@@ -97,9 +95,9 @@ private class URLProtocolStub: URLProtocol {
             self.error = error
         }
     }
-    static var messages = [URL: Stub]() // like a logger 🪵 [ "http://a-given-url.com": stubObject ]
-    static func stub(url: URL, data: Data?, response: URLResponse?, error: NSError?) { // shortcut to mock wanted behaviour 😉
-        messages[url] = Stub(data: data, response: response, error: error)
+    static var stub: Stub? // like a logger 🪵 [ "http://a-given-url.com": stubObject ]
+    static func stub(data: Data?, response: URLResponse?, error: NSError?) { // shortcut to mock wanted behaviour 😉
+        stub = Stub(data: data, response: response, error: error)
     }
 
     static func startInterceptingRequests(){
@@ -108,12 +106,11 @@ private class URLProtocolStub: URLProtocol {
 
     static func stopInterceptingRequest() {
         URLProtocol.unregisterClass(self)
-        messages = [:]
+        stub = nil
     }
 
     override class func canInit(with request: URLRequest) -> Bool {
-        guard let url = request.url else { return false }
-        return messages[url] != nil
+        true
     }
 
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {
@@ -121,16 +118,14 @@ private class URLProtocolStub: URLProtocol {
     }
 
     override func startLoading() {
-        guard let url = request.url else {
-            return
-        }
-        if let data = URLProtocolStub.messages[url]?.data {
+        guard request.url != nil else { return }
+        if let data = URLProtocolStub.stub?.data {
             client?.urlProtocol(self, didLoad: data)
         }
-        if let response = URLProtocolStub.messages[url]?.response {
+        if let response = URLProtocolStub.stub?.response {
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         }
-        else if let error = URLProtocolStub.messages[url]?.error {
+        else if let error = URLProtocolStub.stub?.error {
             client?.urlProtocol(self, didFailWithError: error)
         }
         client?.urlProtocolDidFinishLoading(self)
