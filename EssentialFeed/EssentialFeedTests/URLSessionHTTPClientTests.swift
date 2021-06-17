@@ -28,7 +28,6 @@ class RemoteClient {
     }
 
     func get(from url: URL, completion: @escaping (ClientResult) -> Void = { _ in }) {
-        let url = URL(string: "http://a-wrong-url.com")!
         session.dataTask(with: url) { _, _, error in
             if let error = error {
                 completion(.failure(error))
@@ -41,14 +40,20 @@ class RemoteClient {
 final class URLSessionHTTPClientTests: XCTestCase {
 
 
-    // I will test two things here:
-    // 1. We are hitting the correct url.
-    // 2. We are making a GET request type.
+    override class func setUp() {
+        super.setUp()
+        URLProtocolStub.startInterceptingRequests()
+    }
 
+    override class func tearDown() {
+        URLProtocolStub.stopInterceptingRequests()
+        super.tearDown()
+    }
+
+    /// I will test two things here: 1. We are hitting the correct url. 2. We are making a GET request type.
     func test_getFromURL_performsCorrectGETRequest() {
         // In this test case, I don't guarantee the order of the call methods, again I don't own the URLProtcol type or URLSystem, so I don't know the order of the method, i.e I don't know when to assert, thats why we pay pass that by using closures, so we can start asserting when the closure replied to us on the right method, so we injected a closure, and on the right moment when we reach it, we consume and notify the observer in the test and then we can assert.
 
-        URLProtocolStub.startInterceptingRequests()
         let expec = expectation(description: "Waiting for completion")
 
         let url = URL(string: "http://a-given-url.com")!
@@ -62,13 +67,11 @@ final class URLSessionHTTPClientTests: XCTestCase {
         }
 
         wait(for: [expec], timeout: 1.0)
-        URLProtocolStub.stopInterceptingRequests()
 
     }
+
     // Fail Test
     func test_getFromURL_failsWithExpectedErrorOnRequestError() {
-
-        URLProtocolStub.startInterceptingRequests()
 
         let url = URL(string: "http://given-url.com")!
         let expectedError = NSError(domain: "any error", code: 1)
@@ -89,7 +92,6 @@ final class URLSessionHTTPClientTests: XCTestCase {
         })
         wait(for: [exp], timeout: 1.0)
 
-        URLProtocolStub.stopInterceptingRequests()
     }
 }
 
@@ -123,6 +125,8 @@ private class URLProtocolStub: URLProtocol {
     }
     static var stub: Stub? // like a logger 🪵 [ "http://a-given-url.com": stubObject ]
     static var didRequestClosure: ((URLRequest) -> Void)?
+
+    
     static func stub(data: Data?, response: URLResponse?, error: NSError?) { // shortcut to mock wanted behaviour 😉
         stub = Stub(data: data, response: response, error: error)
     }
