@@ -20,7 +20,7 @@ import EssentialFeed
 // So you free the production from any testing constrains 🆓
 // Implement and maintain Only what you care about 👌
 
-class RemoteClient {
+class URLSessionHTTPClient {
     private let session: URLSession
 
     init(session: URLSession = .shared) {
@@ -57,15 +57,14 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let expec = expectation(description: "Waiting for completion")
 
         let url = URL(string: "http://a-given-url.com")!
-        let client = RemoteClient()
-        client.get(from: url)
+        let sut = makeSUT()
+        sut.get(from: url)
 
         URLProtocolStub.observerRequests { request in
             XCTAssertEqual(request.url, url)
             XCTAssertEqual(request.httpMethod, "GET")
             expec.fulfill()
         }
-
         wait(for: [expec], timeout: 1.0)
 
     }
@@ -77,7 +76,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let expectedError = NSError(domain: "any error", code: 1)
         URLProtocolStub.stub(data: nil, response: nil, error: expectedError)
 
-        let sut = RemoteClient()
+        let sut = makeSUT()
         let exp = expectation(description: "Wait for completion")
 
         sut.get(from: url, completion: { result in
@@ -95,7 +94,12 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
 }
 
+
 // MARK: - Test Helpers
+private func makeSUT() -> URLSessionHTTPClient {
+    let client = URLSessionHTTPClient()
+    return client
+}
 // Spy for the session, that will be injected to the client (SUT)
 // The main function here is the dataTask(with url), which returns a URLSessionDataTask instance
 // So we need a fake URLSessionDataTask 😼 (aka: DataTask)
@@ -126,7 +130,6 @@ private class URLProtocolStub: URLProtocol {
     static var stub: Stub? // like a logger 🪵 [ "http://a-given-url.com": stubObject ]
     static var didRequestClosure: ((URLRequest) -> Void)?
 
-    
     static func stub(data: Data?, response: URLResponse?, error: NSError?) { // shortcut to mock wanted behaviour 😉
         stub = Stub(data: data, response: response, error: error)
     }
