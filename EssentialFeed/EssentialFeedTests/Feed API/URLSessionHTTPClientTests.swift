@@ -56,12 +56,11 @@ final class URLSessionHTTPClientTests: XCTestCase {
 
         let expec = expectation(description: "Waiting for completion")
 
-        let url = URL(string: "http://a-given-url.com")!
         let sut = makeSUT()
-        sut.get(from: url)
+        sut.get(from: .anyURL())
 
         URLProtocolStub.observerRequests { request in
-            XCTAssertEqual(request.url, url)
+            XCTAssertEqual(request.url, .anyURL())
             XCTAssertEqual(request.httpMethod, "GET")
             expec.fulfill()
         }
@@ -72,14 +71,13 @@ final class URLSessionHTTPClientTests: XCTestCase {
     // Fail Test
     func test_getFromURL_failsWithExpectedErrorOnRequestError() {
 
-        let url = URL(string: "http://given-url.com")!
         let expectedError = NSError(domain: "any error", code: 1)
         URLProtocolStub.stub(data: nil, response: nil, error: expectedError)
 
         let sut = makeSUT()
         let exp = expectation(description: "Wait for completion")
 
-        sut.get(from: url, completion: { result in
+        sut.get(from: .anyURL(), completion: { result in
 
             switch result {
             case let .failure(receivedError as NSError):
@@ -94,12 +92,23 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
 }
 
+private extension URL {
+    static func anyURL() -> URL {
+        let url = URL(string: "http://given-url.com")!
+        return url
+    }
+}
 
 // MARK: - Test Helpers
-private func makeSUT() -> URLSessionHTTPClient {
-    let client = URLSessionHTTPClient()
-    return client
+/// Create makeSUT() factory method to create client, to protect our test from unrelated changes, If we introduced decencies to the client type so the tests that don't care about this decencies can just call this method and we can add default values to this factory method so only the test cases that wants to send specific values for the decency can send it, other can depend on the default values that are supported by this factory method.
+
+private func makeSUT(file: StaticString = #file, line: UInt = #line) -> URLSessionHTTPClient {
+    let sut = URLSessionHTTPClient()
+    // trackForMemoryLeaks(sut)
+    return sut
 }
+
+
 // Spy for the session, that will be injected to the client (SUT)
 // The main function here is the dataTask(with url), which returns a URLSessionDataTask instance
 // So we need a fake URLSessionDataTask 😼 (aka: DataTask)
