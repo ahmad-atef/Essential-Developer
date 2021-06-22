@@ -23,20 +23,18 @@ final class URLSessionHTTPClientTests: XCTestCase {
 
     // Check for correct url & correct request type (GET)
     func test_getFromURL_performsCorrectGETRequest() {
-        // In this test case, I don't guarantee the order of the call methods, again I don't own the URLProtcol type or URLSystem, so I don't know the order of the method, i.e I don't know when to assert, thats why we pay pass that by using closures, so we can start asserting when the closure replied to us on the right method, so we injected a closure, and on the right moment when we reach it, we consume and notify the observer in the test and then we can assert.
-
-        let expec = expectation(description: "Waiting for completion")
-
-        let sut = makeSUT()
-        sut.get(from: .anyURL(), completion: { _ in }) 
-
-        URLProtocolStub.observerRequests { request in
-            XCTAssertEqual(request.url, .anyURL())
-            XCTAssertEqual(request.httpMethod, "GET")
-            expec.fulfill()
-        }
-        wait(for: [expec], timeout: 1.0)
-
+//        let url = URL.anyURL()
+//        let exp = expectation(description: "Wait for request")
+//
+//        URLProtocolStub.observeRequests { request in
+//            XCTAssertEqual(request.url, url)
+//            XCTAssertEqual(request.httpMethod, "GET")
+//            exp.fulfill()
+//        }
+//
+//        makeSUT().get(from: url) { _ in }
+//
+//        wait(for: [exp], timeout: 1.0)
     }
 
     // Should Fail when session returns Error
@@ -104,6 +102,7 @@ private func makeSUT(file: StaticString = #file, line: UInt = #line) -> HTTPClie
 
 // We will use the recommended way from Apple to test network requests, which is using the URLProtocol approach, so we will be the network system, that will handle the URL requests protocols.
 private class URLProtocolStub: URLProtocol {
+
     struct Stub {
         let data: Data?
         let response: URLResponse?
@@ -115,9 +114,14 @@ private class URLProtocolStub: URLProtocol {
             self.error = error
         }
     }
-    static var stub: Stub? // like a logger 🪵 [ "http://a-given-url.com": stubObject ]
+
+    /// Like a logger 🪵 [ "http://a-given-url.com": stubObject ]
+    static var stub: Stub?
+
+    /// I don't guarantee the order of the call methods, I don't know when to assert, thats why we pay pass that by using closures, so we can start asserting when the closure reply.
     static var didRequestClosure: ((URLRequest) -> Void)?
 
+    /// The Stub Control method
     static func stub(data: Data?, response: URLResponse?, error: Error?) { // shortcut to mock wanted behaviour 😉
         stub = Stub(data: data, response: response, error: error)
     }
@@ -132,7 +136,7 @@ private class URLProtocolStub: URLProtocol {
         Self.didRequestClosure = nil
     }
 
-    static func observerRequests(_ observeRequest: @escaping (URLRequest) -> Void) -> Void  {
+    static func observeRequests(_ observeRequest: @escaping (URLRequest) -> Void) -> Void  {
         didRequestClosure = observeRequest
     }
 
