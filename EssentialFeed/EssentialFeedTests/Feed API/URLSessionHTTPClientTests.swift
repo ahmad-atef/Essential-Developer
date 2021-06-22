@@ -9,36 +9,7 @@ import XCTest
 import EssentialFeed
 
 
-// So the production implementation for Client, would be a real request for the API.
-// We need to be able to test it first because we don't have API yet 🤗
-// What will happen at the end of the day is a URLSession -> DataTaskWith(url) request, that return a completion block.
-// So the RemoteClient will have the Session that do that ☝️
-// And will have an API method get(from url) that will be the window to shot for the request.
-// So Client has a Session 😉
-
-//Test behaviour, not framework (production) details
-// So you free the production from any testing constrains 🆓
-// Implement and maintain Only what you care about 👌
-
-class URLSessionHTTPClient {
-    private let session: URLSession
-
-    init(session: URLSession = .shared) {
-        self.session = session
-    }
-
-    func get(from url: URL, completion: @escaping (ClientResult) -> Void = { _ in }) {
-        session.dataTask(with: url) { _, _, error in
-            if let error = error {
-                completion(.failure(error))
-            }
-        }.resume()
-    }
-
-}
-
 final class URLSessionHTTPClientTests: XCTestCase {
-
 
     override class func setUp() {
         super.setUp()
@@ -50,14 +21,14 @@ final class URLSessionHTTPClientTests: XCTestCase {
         super.tearDown()
     }
 
-    /// I will test two things here: 1. We are hitting the correct url. 2. We are making a GET request type.
+    // Check for correct url & correct request type (GET)
     func test_getFromURL_performsCorrectGETRequest() {
         // In this test case, I don't guarantee the order of the call methods, again I don't own the URLProtcol type or URLSystem, so I don't know the order of the method, i.e I don't know when to assert, thats why we pay pass that by using closures, so we can start asserting when the closure replied to us on the right method, so we injected a closure, and on the right moment when we reach it, we consume and notify the observer in the test and then we can assert.
 
         let expec = expectation(description: "Waiting for completion")
 
         let sut = makeSUT()
-        sut.get(from: .anyURL())
+        sut.get(from: .anyURL(), completion: { _ in }) 
 
         URLProtocolStub.observerRequests { request in
             XCTAssertEqual(request.url, .anyURL())
@@ -68,69 +39,77 @@ final class URLSessionHTTPClientTests: XCTestCase {
 
     }
 
-    // Fail Test
+    // Should Fail when session returns Error
     func test_getFromURL_failsWithExpectedErrorOnRequestError() {
+        let passedError = NSError.any
 
-        let expectedError = NSError(domain: "any error", code: 1)
-        URLProtocolStub.stub(data: nil, response: nil, error: expectedError)
+        let result = completeSession(data: nil, response: nil, error: passedError)
 
-        let sut = makeSUT()
+        if case .failure(let error as NSError) = result {
+            XCTAssertEqual(error.code, passedError.code)
+            XCTAssertEqual(error.domain, passedError.domain)
+        } else {
+            XCTFail()
+        }
+    }
+
+    // test invalid scenarios
+    func test_getFromURL_failsOnAllInvalidRepresentationCases() {
+        XCTAssertNotNil(completeSession(data: nil, response: nil, error: nil))
+        XCTAssertNotNil(completeSession(data: nil, response: URLResponse(), error: nil))
+        XCTAssertNotNil(completeSession(data: nil, response: HTTPURLResponse(), error: nil))
+        XCTAssertNotNil(completeSession(data: Data(), response: nil, error: nil))
+        XCTAssertNotNil(completeSession(data: Data(), response: nil, error: NSError.any))
+        XCTAssertNotNil(completeSession(data: nil, response: URLResponse(), error: NSError.any))
+        XCTAssertNotNil(completeSession(data: nil, response: HTTPURLResponse(), error: NSError.any))
+        XCTAssertNotNil(completeSession(data: Data(), response: URLResponse(), error: NSError.any))
+        XCTAssertNotNil(completeSession(data: Data(), response: HTTPURLResponse(), error: NSError.any))
+        XCTAssertNotNil(completeSession(data: nil, response: nil, error: NSError.any))
+    }
+
+    func test_getFromURL_SuccesssOnValidCases() {
+        let result = completeSession(data: Data(), response: HTTPURLResponse(), error: nil)
+        if case .success(let response) = result {
+            XCTAssertNotNil(response.0)
+        } else {
+            XCTFail()
+        }
+    }
+    private func completeSession(data: Data?, response: URLResponse?, error: Error?, file: StaticString = #file, line: UInt = #line) -> ClientResult {
+
+        URLProtocolStub.stub(data: data, response: response, error: error)
+        let sut = makeSUT(file: file, line: line)
         let exp = expectation(description: "Wait for completion")
 
-        sut.get(from: .anyURL(), completion: { result in
+        var receivedResult: ClientResult!
 
-            switch result {
-            case let .failure(receivedError as NSError):
-                XCTAssertEqual(receivedError.code, expectedError.code)
-            default:
-                XCTFail("")
+        sut.get(from: .anyURL()) { result in
+            receivedResult = result
+                exp.fulfill()
             }
-            exp.fulfill()
-        })
+
         wait(for: [exp], timeout: 1.0)
-
-    }
-}
-
-private extension URL {
-    static func anyURL() -> URL {
-        let url = URL(string: "http://given-url.com")!
-        return url
+        return receivedResult
     }
 }
 
 // MARK: - Test Helpers
-/// Create makeSUT() factory method to create client, to protect our test from unrelated changes, If we introduced decencies to the client type so the tests that don't care about this decencies can just call this method and we can add default values to this factory method so only the test cases that wants to send specific values for the decency can send it, other can depend on the default values that are supported by this factory method.
-
-private func makeSUT(file: StaticString = #file, line: UInt = #line) -> URLSessionHTTPClient {
+/// Factory method to create client, to protect our test from unrelated changes, If we introduced decencies to the client type so the tests that don't care about this decencies can just call this method and we can add default values to this factory method so only the test cases that wants to send specific values for the decency can send it, other can depend on the default values that are supported by this factory method.
+private func makeSUT(file: StaticString = #file, line: UInt = #line) -> HTTPClient {
     let sut = URLSessionHTTPClient()
     // trackForMemoryLeaks(sut)
     return sut
 }
 
 
-// Spy for the session, that will be injected to the client (SUT)
-// The main function here is the dataTask(with url), which returns a URLSessionDataTask instance
-// So we need a fake URLSessionDataTask 😼 (aka: DataTask)
-
-// We will use the recommended way from Apple to test network requests,
-// which is using the URLProtocol approach, so we will be the network system
-// that will handle the URL requests protocols.
-// So we will start by subclassing URLProtocol class
-//Required methods when subclassing:
-//class func canInit(with:URLRequest) -> Bool
-//class func canonicalRequest(for:URLRequest)
-//func startLoading()
-//func stopLoading()
-
+// We will use the recommended way from Apple to test network requests, which is using the URLProtocol approach, so we will be the network system, that will handle the URL requests protocols.
 private class URLProtocolStub: URLProtocol {
-
     struct Stub {
         let data: Data?
         let response: URLResponse?
-        let error: NSError?
+        let error: Error?
 
-        init(data: Data?, response:URLResponse?, error: NSError? = nil) {
+        init(data: Data?, response:URLResponse?, error: Error? = nil) {
             self.data = data
             self.response = response
             self.error = error
@@ -139,7 +118,7 @@ private class URLProtocolStub: URLProtocol {
     static var stub: Stub? // like a logger 🪵 [ "http://a-given-url.com": stubObject ]
     static var didRequestClosure: ((URLRequest) -> Void)?
 
-    static func stub(data: Data?, response: URLResponse?, error: NSError?) { // shortcut to mock wanted behaviour 😉
+    static func stub(data: Data?, response: URLResponse?, error: Error?) { // shortcut to mock wanted behaviour 😉
         stub = Stub(data: data, response: response, error: error)
     }
 
@@ -181,4 +160,18 @@ private class URLProtocolStub: URLProtocol {
     }
 
     override func stopLoading() { }
+}
+
+
+
+private extension URL {
+    static func anyURL() -> URL {
+        let url = URL(string: "http://given-url.com")!
+        return url
+    }
+}
+
+
+private extension NSError {
+    static let any = NSError(domain: "any error", code: 0)
 }
