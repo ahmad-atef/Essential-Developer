@@ -154,12 +154,6 @@ final class RemoteFeedLoaderTests: XCTestCase {
         return(spyClient, loader)
     }
 
-    private func trackForMemoryLeaks(_ object: AnyObject, file: StaticString = #filePath, line: UInt = #line) {
-        addTeardownBlock { [weak object] in
-            XCTAssertNil(object, "Instance should have been allocated, potential memory leak! 🤡", file: file, line: line)
-        }
-    }
-
     private func expect(_ sut: RemoteFeedLoader, toCompleteWithResult expectedResult: FeedLoaderResult, on clientAction: () -> Void, file: StaticString = #filePath, line: UInt = #line ) {
 
         let expectation = expectation(description: "Wait for load completion")
@@ -228,7 +222,7 @@ final class HTTPSpyClient: HTTPClient {
 
     var messages: [Message] = []
 
-    func request(from url: URL, completion: @escaping (ClientResult) -> Void) {
+    func get(from url: URL, completion: @escaping (ClientResult) -> Void) {
         messages.append((url, completion))
     }
 
