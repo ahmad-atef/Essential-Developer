@@ -89,15 +89,15 @@ final class URLSessionHTTPClientTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         return receivedResult
     }
+    // MARK: - Test Helpers
+    /// Factory method to create client, to protect our test from unrelated changes, If we introduced decencies to the client type so the tests that don't care about this decencies can just call this method and we can add default values to this factory method so only the test cases that wants to send specific values for the decency can send it, other can depend on the default values that are supported by this factory method.
+    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> HTTPClient {
+        let sut = URLSessionHTTPClient()
+        trackForMemoryLeaks(sut)
+        return sut
+    }
 }
 
-// MARK: - Test Helpers
-/// Factory method to create client, to protect our test from unrelated changes, If we introduced decencies to the client type so the tests that don't care about this decencies can just call this method and we can add default values to this factory method so only the test cases that wants to send specific values for the decency can send it, other can depend on the default values that are supported by this factory method.
-private func makeSUT(file: StaticString = #file, line: UInt = #line) -> HTTPClient {
-    let sut = URLSessionHTTPClient()
-    // trackForMemoryLeaks(sut)
-    return sut
-}
 
 
 // We will use the recommended way from Apple to test network requests, which is using the URLProtocol approach, so we will be the network system, that will handle the URL requests protocols.
