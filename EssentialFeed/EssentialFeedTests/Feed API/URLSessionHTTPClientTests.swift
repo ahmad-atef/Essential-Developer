@@ -11,12 +11,12 @@ import EssentialFeed
 
 final class URLSessionHTTPClientTests: XCTestCase {
 
-    override class func setUp() {
+    override func setUp() {
         super.setUp()
         URLProtocolStub.startInterceptingRequests()
     }
 
-    override class func tearDown() {
+    override func tearDown() {
         URLProtocolStub.stopInterceptingRequests()
         super.tearDown()
     }
@@ -29,9 +29,10 @@ final class URLSessionHTTPClientTests: XCTestCase {
         URLProtocolStub.observeRequests { request in
             XCTAssertEqual(request.url, url)
             XCTAssertEqual(request.httpMethod, "GET")
+            exp.fulfill()
         }
 
-        makeSUT().get(from: url) { _ in exp.fulfill() }
+        makeSUT().get(from: url) { _ in  }
 
         wait(for: [exp], timeout: 1.0)
     }
