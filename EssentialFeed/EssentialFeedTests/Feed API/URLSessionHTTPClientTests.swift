@@ -23,18 +23,17 @@ final class URLSessionHTTPClientTests: XCTestCase {
 
     // Check for correct url & correct request type (GET)
     func test_getFromURL_performsCorrectGETRequest() {
-//        let url = URL.anyURL()
-//        let exp = expectation(description: "Wait for request")
-//
-//        URLProtocolStub.observeRequests { request in
-//            XCTAssertEqual(request.url, url)
-//            XCTAssertEqual(request.httpMethod, "GET")
-//            exp.fulfill()
-//        }
-//
-//        makeSUT().get(from: url) { _ in }
-//
-//        wait(for: [exp], timeout: 1.0)
+        let url = URL.anyURL()
+        let exp = expectation(description: "Wait for request")
+
+        URLProtocolStub.observeRequests { request in
+            XCTAssertEqual(request.url, url)
+            XCTAssertEqual(request.httpMethod, "GET")
+        }
+
+        makeSUT().get(from: url) { _ in exp.fulfill() }
+
+        wait(for: [exp], timeout: 1.0)
     }
 
     // Should Fail when session returns Error
@@ -79,15 +78,15 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let sut = makeSUT(file: file, line: line)
         let exp = expectation(description: "Wait for completion")
 
-        var receivedResult: ClientResult!
+        var capturedResult: ClientResult!
 
         sut.get(from: .anyURL()) { result in
-            receivedResult = result
+            capturedResult = result
                 exp.fulfill()
             }
 
         wait(for: [exp], timeout: 1.0)
-        return receivedResult
+        return capturedResult
     }
     // MARK: - Test Helpers
     /// Factory method to create client, to protect our test from unrelated changes, If we introduced decencies to the client type so the tests that don't care about this decencies can just call this method and we can add default values to this factory method so only the test cases that wants to send specific values for the decency can send it, other can depend on the default values that are supported by this factory method.
@@ -115,7 +114,7 @@ private class URLProtocolStub: URLProtocol {
         }
     }
 
-    /// Like a logger 🪵 [ "http://a-given-url.com": stubObject ]
+    /// Like a logger 🪵 [ "http://a-given-url.com": stubObject1 ]
     static var stub: Stub?
 
     /// I don't guarantee the order of the call methods, I don't know when to assert, thats why we pay pass that by using closures, so we can start asserting when the closure reply.
@@ -141,7 +140,6 @@ private class URLProtocolStub: URLProtocol {
     }
 
     override class func canInit(with request: URLRequest) -> Bool {
-        didRequestClosure?(request)
         return true
     }
 
@@ -150,6 +148,10 @@ private class URLProtocolStub: URLProtocol {
     }
 
     override func startLoading() {
+        if let requestObserver = URLProtocolStub.didRequestClosure {
+            client?.urlProtocolDidFinishLoading(self)
+            return requestObserver(request)
+        }
         guard request.url != nil else { return }
         if let data = URLProtocolStub.stub?.data {
             client?.urlProtocol(self, didLoad: data)
