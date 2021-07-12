@@ -12,3 +12,4 @@ public typealias FeedLoaderResult = Result<[FeedItem], Error>
 protocol FeedLoader {
     func loadFeed(completion: @escaping (FeedLoaderResult) -> Void)
 }
+

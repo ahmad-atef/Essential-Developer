@@ -73,6 +73,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
             XCTFail()
         }
     }
+
     private func completeSession(data: Data?, response: URLResponse?, error: Error?, file: StaticString = #file, line: UInt = #line) -> ClientResult {
 
         URLProtocolStub.stub(data: data, response: response, error: error)
@@ -115,7 +116,8 @@ private class URLProtocolStub: URLProtocol {
         }
     }
 
-    /// Like a logger 🪵 [ "http://a-given-url.com": stubObject1 ]
+    // So this is the control point for us, we check against this object, the type of this control object contain all the data that can be returned from make a request using a session, which is Data?, Response?, and Error?
+    // So we can stub the session, or complete the session with the result that we want to test case it, and check against it here, Like a logger 🪵
     static var stub: Stub?
 
     /// I don't guarantee the order of the call methods, I don't know when to assert, thats why we pay pass that by using closures, so we can start asserting when the closure reply.

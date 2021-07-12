@@ -75,7 +75,7 @@ final class RemoteFeedLoaderTests: XCTestCase {
         .forEach { index, statusCode  in
 
             expect(loader, toCompleteWithResult: .failure(RemoteFeedLoader.Error.invalidData)) {
-                let itemJSON = makeItemJSON([])
+                let itemJSON = makeItemJSON([]) // doesn't matter, it should fail any way, because the response comes with status code anything but 200, which is the only one we reply with success 😼
                 client.complete(with: statusCode, data: itemJSON, at: index)
             }
         }
@@ -83,16 +83,19 @@ final class RemoteFeedLoaderTests: XCTestCase {
 
     func test_load_deliversErrorOn200ResponseWithInvalidJSON() {
         let (client, sut) = makeSpyClientAndRemoteLoader(from: .given)
-        [
+        
+        let corruptedData = [
             Data(count: 2),
             Data("Invalid JSON".utf8)
         ]
-        .enumerated()
-        .forEach { index, data in
-            expect(sut, toCompleteWithResult: .failure(RemoteFeedLoader.Error.invalidData)) {
-                client.complete(with: 200, data: data, at: index)
+
+        corruptedData
+            .enumerated()
+            .forEach { index, data in
+                expect(sut, toCompleteWithResult: .failure(RemoteFeedLoader.Error.invalidData)) {
+                    client.complete(with: 200, data: data, at: index)
+                }
             }
-        }
     }
 
     func test_load_deliversNoItemOn200HTTPResponseWithEmptyJSONList() {
@@ -191,11 +194,18 @@ final class RemoteFeedLoaderTests: XCTestCase {
             "description": description,
             "location": location,
             "image": imageURL.absoluteString
-        ].reduce(into: [String: Any]()) { acc, element in
-            if let value = element.value {
-                acc[element.key] = value
-            }
-        }
+        ].compactMapValues { $0 }
+
+//        let reducedValues = [
+//            "id": id.uuidString,
+//            "description": description,
+//            "location": location,
+//            "image": imageURL.absoluteString
+//        ].reduce(into: [String: Any]()) { acc, element in
+//            if let value = element.value {
+//                acc[element.key] = value
+//            }
+//        }
         return (item, json)
     }
 

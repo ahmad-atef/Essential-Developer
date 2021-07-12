@@ -27,6 +27,9 @@ final class FeedItemMapper {
     // Separate module that represents the API version of the FeedItem 👌🤩
     // and keep that key path knowledge in that domain
     // then you can convert it into the general shared module FeedItem
+    // so instead of ImageURL in the generic module (FeedItem) which is right from the naming point of view, as ImageURL describes exactly what is that
+    // The API replied with image only 🥲
+    // So no problem, will keep the right naming in the generic domain FeedItem, and make a private type in the middle to do that ugly naming for us, with out polluting the generic type 😼
 
     /// Transitional representation of FeedItem that specific of the API module.
     private struct Item: Decodable {
