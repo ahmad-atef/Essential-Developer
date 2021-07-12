@@ -11,30 +11,30 @@ import EssentialFeed
 
 final class URLSessionHTTPClientTests: XCTestCase {
 
-    override class func setUp() {
+    override func setUp() {
         super.setUp()
         URLProtocolStub.startInterceptingRequests()
     }
 
-    override class func tearDown() {
+    override func tearDown() {
         URLProtocolStub.stopInterceptingRequests()
         super.tearDown()
     }
 
     // Check for correct url & correct request type (GET)
     func test_getFromURL_performsCorrectGETRequest() {
-//        let url = URL.anyURL()
-//        let exp = expectation(description: "Wait for request")
-//
-//        URLProtocolStub.observeRequests { request in
-//            XCTAssertEqual(request.url, url)
-//            XCTAssertEqual(request.httpMethod, "GET")
-//            exp.fulfill()
-//        }
-//
-//        makeSUT().get(from: url) { _ in }
-//
-//        wait(for: [exp], timeout: 1.0)
+        let url = URL.anyURL()
+        let exp = expectation(description: "Wait for request")
+
+        URLProtocolStub.observeRequests { request in
+            XCTAssertEqual(request.url, url)
+            XCTAssertEqual(request.httpMethod, "GET")
+            exp.fulfill()
+        }
+
+        makeSUT().get(from: url) { _ in  }
+
+        wait(for: [exp], timeout: 1.0)
     }
 
     // Should Fail when session returns Error
@@ -73,21 +73,22 @@ final class URLSessionHTTPClientTests: XCTestCase {
             XCTFail()
         }
     }
+
     private func completeSession(data: Data?, response: URLResponse?, error: Error?, file: StaticString = #file, line: UInt = #line) -> ClientResult {
 
         URLProtocolStub.stub(data: data, response: response, error: error)
         let sut = makeSUT(file: file, line: line)
         let exp = expectation(description: "Wait for completion")
 
-        var receivedResult: ClientResult!
+        var capturedResult: ClientResult!
 
         sut.get(from: .anyURL()) { result in
-            receivedResult = result
+            capturedResult = result
                 exp.fulfill()
             }
 
         wait(for: [exp], timeout: 1.0)
-        return receivedResult
+        return capturedResult
     }
     // MARK: - Test Helpers
     /// Factory method to create client, to protect our test from unrelated changes, If we introduced decencies to the client type so the tests that don't care about this decencies can just call this method and we can add default values to this factory method so only the test cases that wants to send specific values for the decency can send it, other can depend on the default values that are supported by this factory method.
@@ -115,7 +116,8 @@ private class URLProtocolStub: URLProtocol {
         }
     }
 
-    /// Like a logger 🪵 [ "http://a-given-url.com": stubObject ]
+    // So this is the control point for us, we check against this object, the type of this control object contain all the data that can be returned from make a request using a session, which is Data?, Response?, and Error?
+    // So we can stub the session, or complete the session with the result that we want to test case it, and check against it here, Like a logger 🪵
     static var stub: Stub?
 
     /// I don't guarantee the order of the call methods, I don't know when to assert, thats why we pay pass that by using closures, so we can start asserting when the closure reply.
@@ -141,7 +143,6 @@ private class URLProtocolStub: URLProtocol {
     }
 
     override class func canInit(with request: URLRequest) -> Bool {
-        didRequestClosure?(request)
         return true
     }
 
@@ -150,6 +151,10 @@ private class URLProtocolStub: URLProtocol {
     }
 
     override func startLoading() {
+        if let requestObserver = URLProtocolStub.didRequestClosure {
+            client?.urlProtocolDidFinishLoading(self)
+            return requestObserver(request)
+        }
         guard request.url != nil else { return }
         if let data = URLProtocolStub.stub?.data {
             client?.urlProtocol(self, didLoad: data)
