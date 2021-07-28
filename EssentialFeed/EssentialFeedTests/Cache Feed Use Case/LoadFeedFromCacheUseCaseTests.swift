@@ -45,10 +45,12 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.deleteCashRequestCount, 1)
     }
 
-    private func makeSUT() ->(LocalFeedLoader, SpyFeedStore) {
-        let feedStore = SpyFeedStore()
-        let sut = LocalFeedLoader(feedStore)
-        return (sut, feedStore)
+    private func makeSUT(_ file: StaticString = #filePath, line: UInt = #line) ->(LocalFeedLoader, SpyFeedStore) {
+        let store = SpyFeedStore()
+        let sut = LocalFeedLoader(store)
+        trackForMemoryLeaks(store, file: file, line: line)
+        trackForMemoryLeaks(sut, file: file, line: line)
+        return (sut, store)
     }
 }
 

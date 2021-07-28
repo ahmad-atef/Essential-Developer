@@ -105,7 +105,6 @@
 			children = (
 				1E6F11142647D917005F9F2B /* LoadFeedFromRemoteUseCaseTests.swift */,
 				1E7733E626733A1800277C35 /* URLSessionHTTPClientTests.swift */,
-				1EC6F684267B349C00BD5175 /* Helper */,
 			);
 			path = "Feed API";
 			sourceTree = "<group>";
@@ -145,6 +144,7 @@
 			isa = PBXGroup;
 			children = (
 				1EC1CAE9263A95190074239B /* Info.plist */,
+				1EC6F684267B349C00BD5175 /* Helper */,
 				1E42A7E7266C2784008D57F1 /* Feed API */,
 				1ED9295F26A169F5003A63EC /* Cache Feed Use Case */,
 			);
