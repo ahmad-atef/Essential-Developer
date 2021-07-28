@@ -30,6 +30,37 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
             }
         }
     }
+
+    func test_init_doesNotDeleteCacheUponCreation () {
+        let store = SpyFeedStore()
+        _ = LocalFeedLoader(store)
+
+        XCTAssertEqual(store.deleteCashRequestCount, 0)
+    }
+
+    func test_save_requestsCacheDeletion() {
+        let feedStore = SpyFeedStore()
+        let sut = LocalFeedLoader(feedStore)
+
+        sut.save(items: []) { _ in }
+
+        XCTAssertEqual(feedStore.deleteCashRequestCount, 1)
+    }
+}
+
+private class SpyFeedStore: FeedStore {
+
+    private(set) var deleteCashRequestCount = 0
+    
+
+    func removeItems(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
+        deleteCashRequestCount += 1
+    }
+
+    func insertItems(_ items: [FeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void) {
+
+    }
+
 }
 
 
