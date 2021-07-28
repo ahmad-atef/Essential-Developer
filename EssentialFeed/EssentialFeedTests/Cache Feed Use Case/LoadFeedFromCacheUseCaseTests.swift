@@ -32,26 +32,30 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 
     func test_init_doesNotDeleteCacheUponCreation () {
-        let store = SpyFeedStore()
-        _ = LocalFeedLoader(store)
+        let (_, store) = makeSUT()
 
         XCTAssertEqual(store.deleteCashRequestCount, 0)
     }
 
     func test_save_requestsCacheDeletion() {
-        let feedStore = SpyFeedStore()
-        let sut = LocalFeedLoader(feedStore)
+        let (sut, store) = makeSUT()
 
         sut.save(items: []) { _ in }
 
-        XCTAssertEqual(feedStore.deleteCashRequestCount, 1)
+        XCTAssertEqual(store.deleteCashRequestCount, 1)
+    }
+
+    private func makeSUT() ->(LocalFeedLoader, SpyFeedStore) {
+        let feedStore = SpyFeedStore()
+        let sut = LocalFeedLoader(feedStore)
+        return (sut, feedStore)
     }
 }
 
 private class SpyFeedStore: FeedStore {
 
     private(set) var deleteCashRequestCount = 0
-    
+
 
     func removeItems(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
         deleteCashRequestCount += 1
