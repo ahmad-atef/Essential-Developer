@@ -10,9 +10,9 @@ import EssentialFeed
 
 class LocalFeedLoader {
     private let feedStore: FeedStore
-    private let currentDate: () -> Date
+    private let currentDate: Date
 
-    init(_ feedStore: FeedStore, currentDate: @escaping () -> Date) {
+    init(_ feedStore: FeedStore, currentDate: Date) {
         self.feedStore = feedStore
         self.currentDate = currentDate
     }
@@ -28,7 +28,7 @@ class LocalFeedLoader {
         feedStore.deleteCachedFeed { [weak self] error in
             guard let self = self else { return }
             if error == nil {
-                self.feedStore.insertFeed(items, timeStamp: self.currentDate(), completion: completion)
+                self.feedStore.insertFeed(items, timeStamp: self.currentDate, completion: completion)
             } else {
                 completion(error)
             }
@@ -67,9 +67,7 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
 
     func test_save_requestDeletionThenInsertionOnCacheDeletionSuccess() {
         let timestamp = Date()
-        let (sut, store) = makeSUT {
-            timestamp
-        }
+        let (sut, store) = makeSUT(currentDate: timestamp)
 
         let items: [FeedItem] = [.unique, .unique]
         sut.save(items: items) { _ in }
@@ -98,9 +96,7 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
 
     func test_save_SuccessOnDeletionInsertionSuccess() {
         let timeStamp = Date()
-        let (sut, feedStore) = makeSUT {
-            timeStamp
-        }
+        let (sut, feedStore) = makeSUT(currentDate: timeStamp)
 
         let exp = expectation(description: "wait for all operations to finish")
         sut.save(items: [.unique]) { error in
@@ -116,7 +112,7 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
 
 
 
-    private func makeSUT(currentDate: @escaping (() -> Date) = { return Date.init() }, _ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
+    private func makeSUT(currentDate: Date  = .init(), _ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
         let store = SpyFeedStore()
         let sut = LocalFeedLoader(store, currentDate: currentDate)
         trackForMemoryLeaks(store, file: file, line: line)
