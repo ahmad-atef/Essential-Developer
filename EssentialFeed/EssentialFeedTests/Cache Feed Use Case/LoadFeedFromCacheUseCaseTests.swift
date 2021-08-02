@@ -8,45 +8,56 @@
 import XCTest
 import EssentialFeed
 
+class LocalFeedLoader {
+    let feedStore: FeedStore
+    let timeStamp: Date
+
+    init(_ feedStore: FeedStore, timeStamp: Date = .init()) {
+        self.feedStore = feedStore
+        self.timeStamp = timeStamp
+    }
+
+    func save(items: [FeedItem]) {
+        feedStore.deleteCachedFeed()
+    }
+}
+
 class LoadFeedFromCacheUseCaseTests: XCTestCase {
 
-    class LocalFeedLoader {
-        let feedStore: FeedStore
-        let timeStamp: Date
-
-        init(_ feedStore: FeedStore, timeStamp: Date = .init()) {
-            self.feedStore = feedStore
-            self.timeStamp = timeStamp
-        }
-
-        func save(items: [FeedItem], completion: @escaping (Error?) -> Void) {
-            feedStore.removeItems(items) { [weak self] error in
-                guard let self = self else { return }
-                if let error = error {
-                    completion(error)
-                } else {
-                    self.feedStore.insertItems(items, timeStamp: self.timeStamp, completion: completion)
-                }
-            }
-        }
-    }
 
     func test_init_doesNotDeleteCacheUponCreation () {
         let (_, store) = makeSUT()
 
-        XCTAssertEqual(store.deleteCashRequestCount, 0)
+        XCTAssertEqual(store.deleteCacheCount, 0)
     }
 
     func test_save_requestsCacheDeletion() {
         let (sut, store) = makeSUT()
 
-        sut.save(items: []) { _ in }
+        sut.save(items: [])
 
-        XCTAssertEqual(store.deleteCashRequestCount, 1)
+        XCTAssertEqual(store.deleteCacheCount, 1)
     }
 
-    private func makeSUT(_ file: StaticString = #filePath, line: UInt = #line) ->(LocalFeedLoader, SpyFeedStore) {
-        let store = SpyFeedStore()
+    func test_save_doesNotRequestInsertOnCacheDeletionError() {
+        let (sut, store) = makeSUT()
+
+        sut.save(items: [])
+        store.completeDeletionWithError(.anyNSError)
+
+        XCTAssertEqual(store.insertionCacheCount, 0)
+    }
+
+    func test_save_requestsInsertionOnCacheDeletionSuccess() {
+        let (sut, store) = makeSUT()
+
+        sut.save(items: [])
+        store.completeDeletionSuccessfully()
+        XCTAssertEqual(store.insertionCacheCount, 1)
+    }
+
+    private func makeSUT(_ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: FeedStore) {
+        let store = FeedStore()
         let sut = LocalFeedLoader(store)
         trackForMemoryLeaks(store, file: file, line: line)
         trackForMemoryLeaks(sut, file: file, line: line)
@@ -54,23 +65,23 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 }
 
-private class SpyFeedStore: FeedStore {
+class FeedStore {
+    private (set) var deleteCacheCount = 0
+    private (set) var insertionCacheCount = 0
 
-    private(set) var deleteCashRequestCount = 0
-
-
-    func removeItems(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
-        deleteCashRequestCount += 1
+    func deleteCachedFeed() {
+        deleteCacheCount += 1
     }
 
-    func insertItems(_ items: [FeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void) {
+    func completeDeletionWithError(_ error: NSError) {
 
     }
 
+    func completeDeletionSuccessfully() {
+        insertionCacheCount += 1
+    }
 }
 
-
-protocol FeedStore {
-    func removeItems(_ items: [FeedItem], completion: @escaping (Error?) -> Void)
-    func insertItems(_ items: [FeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void)
+private extension NSError{
+    static let anyNSError = NSError(domain: "any error", code: 0)
 }
