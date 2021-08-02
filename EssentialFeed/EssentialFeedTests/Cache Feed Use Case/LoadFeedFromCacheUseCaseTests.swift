@@ -9,12 +9,12 @@ import XCTest
 import EssentialFeed
 
 class LocalFeedLoader {
-    let feedStore: FeedStore
-    let timeStamp: Date
+    private let feedStore: FeedStore
+    private let currentDate: () -> Date
 
-    init(_ feedStore: FeedStore, timeStamp: Date = .init()) {
+    init(_ feedStore: FeedStore, currentDate: @escaping () -> Date) {
         self.feedStore = feedStore
-        self.timeStamp = timeStamp
+        self.currentDate = currentDate
     }
 
     /// Simply what this API does is, given you want to save some items / response
@@ -28,7 +28,7 @@ class LocalFeedLoader {
         feedStore.deleteCachedFeed { [weak self] error in
             guard let self = self else { return }
             if error == nil {
-                self.feedStore.insertFeed(items, completion: completion)
+                self.feedStore.insertFeed(items, timeStamp: self.currentDate(), completion: completion)
             } else {
                 completion(error)
             }
@@ -38,7 +38,7 @@ class LocalFeedLoader {
 
 protocol FeedStore {
     func deleteCachedFeed(completion: @escaping (Error?) -> Void)
-    func insertFeed(_ items: [FeedItem], completion: @escaping (Error?) -> Void)
+    func insertFeed(_ items: [FeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void)
 }
 
 class LoadFeedFromCacheUseCaseTests: XCTestCase {
@@ -66,14 +66,17 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 
     func test_save_requestDeletionThenInsertionOnCacheDeletionSuccess() {
-        let (sut, store) = makeSUT()
+        let timestamp = Date()
+        let (sut, store) = makeSUT {
+            timestamp
+        }
 
         let items: [FeedItem] = [.unique, .unique]
         sut.save(items: items) { _ in }
         store.completeDeletionSuccessfully()
 
         XCTAssertEqual(store.operations.count, 2)
-        XCTAssertEqual(store.operations, [.deletion, .insertion(items)])
+        XCTAssertEqual(store.operations, [.deletion, .insertion(items, timestamp)])
     }
 
     func test_save_deleteSuccess_InsertFail() {
@@ -94,7 +97,10 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 
     func test_save_SuccessOnDeletionInsertionSuccess() {
-        let (sut, feedStore) = makeSUT()
+        let timeStamp = Date()
+        let (sut, feedStore) = makeSUT {
+            timeStamp
+        }
 
         let exp = expectation(description: "wait for all operations to finish")
         sut.save(items: [.unique]) { error in
@@ -110,9 +116,9 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
 
 
 
-    private func makeSUT(_ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
+    private func makeSUT(currentDate: @escaping (() -> Date) = { return Date.init() }, _ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
         let store = SpyFeedStore()
-        let sut = LocalFeedLoader(store)
+        let sut = LocalFeedLoader(store, currentDate: currentDate)
         trackForMemoryLeaks(store, file: file, line: line)
         trackForMemoryLeaks(sut, file: file, line: line)
         return (sut, store)
@@ -123,7 +129,7 @@ final class SpyFeedStore: FeedStore {
 
     enum Operation: Equatable {
         case deletion
-        case insertion(_ items: [FeedItem])
+        case insertion([FeedItem], Date)
     }
 
     private(set) var operations = [Operation]()
@@ -149,8 +155,8 @@ final class SpyFeedStore: FeedStore {
     }
 
 
-    func insertFeed(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
-        operations.append(.insertion(items))
+    func insertFeed(_ items: [FeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void) {
+        operations.append(.insertion(items, timeStamp))
         insertions.append(completion)
     }
 
