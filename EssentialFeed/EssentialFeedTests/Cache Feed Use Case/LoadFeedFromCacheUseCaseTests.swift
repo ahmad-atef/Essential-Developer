@@ -56,6 +56,16 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.insertionCacheCount, 1)
     }
 
+    func test_save_requestDeletionThenInsertionOnCacheDeletionSuccess() {
+        let (sut, loader) = makeSUT()
+
+        sut.save(items: [])
+        loader.completeDeletionSuccessfully()
+
+        XCTAssertEqual(loader.operations.count, 2)
+        XCTAssertEqual(loader.operations, [.deletion, .insertion([])])
+    }
+
     private func makeSUT(_ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: FeedStore) {
         let store = FeedStore()
         let sut = LocalFeedLoader(store)
@@ -69,8 +79,16 @@ class FeedStore {
     private (set) var deleteCacheCount = 0
     private (set) var insertionCacheCount = 0
 
+    enum Operation: Equatable {
+        case deletion
+        case insertion(_ items: [FeedItem])
+    }
+
+    private(set) var operations = [Operation]()
+
     func deleteCachedFeed() {
         deleteCacheCount += 1
+        operations.append(.deletion)
     }
 
     func completeDeletionWithError(_ error: NSError) {
@@ -79,6 +97,7 @@ class FeedStore {
 
     func completeDeletionSuccessfully() {
         insertionCacheCount += 1
+        operations.append(.insertion([]))
     }
 }
 
