@@ -42,12 +42,16 @@ protocol FeedStore {
 }
 
 class LoadFeedFromCacheUseCaseTests: XCTestCase {
+
+    // no save command executed, I shouldn't do anything with the feed store
+    // up on creation
     func test_init_doesNotDeleteCacheUponCreation () {
         let (_, store) = makeSUT()
 
         XCTAssertEqual(store.operations, [])
     }
 
+    // when invoking `save` command, I should request from feed-store to delete
     func test_save_requestsCacheDeletion() {
         let (sut, store) = makeSUT()
 
@@ -56,13 +60,23 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.deletion])
     }
 
+    // when saving but the `delete` command fails, I shouldn't insert anything
+    // + I should receive deletion failure error
     func test_save_doesNotRequestInsertOnCacheDeletionError() {
         let (sut, store) = makeSUT()
 
-        sut.save(items: []) { _ in }
+        var expectedError: NSError = .anyNSError
+        let exp = expectation(description: "")
+        sut.save(items: []) { error in
+            expectedError = error! as NSError
+            exp.fulfill()
+        }
+
         store.completeDeletionWithError(.anyNSError)
+        wait(for: [exp], timeout: 1.0)
 
         XCTAssertEqual(store.operations, [.deletion])
+        XCTAssertEqual(expectedError, .anyNSError)
     }
 
     func test_save_requestDeletionThenInsertionOnCacheDeletionSuccess() {
@@ -129,8 +143,8 @@ final class SpyFeedStore: FeedStore {
     }
 
     private(set) var operations = [Operation]()
-    private(set) var deletions = [(Error?) -> Void]()
-    private(set) var insertions = [(Error?) -> Void]()
+    private var deletions = [(Error?) -> Void]()
+    private var insertions = [(Error?) -> Void]()
 
 
     func deleteCachedFeed(completion: @escaping (Error?) -> Void) {
