@@ -36,9 +36,12 @@ class LocalFeedLoader {
     }
 }
 
+protocol FeedStore {
+    func deleteCachedFeed(completion: @escaping (Error?) -> Void)
+    func insertFeed(_ items: [FeedItem], completion: @escaping (Error?) -> Void)
+}
+
 class LoadFeedFromCacheUseCaseTests: XCTestCase {
-
-
     func test_init_doesNotDeleteCacheUponCreation () {
         let (_, store) = makeSUT()
 
@@ -107,8 +110,8 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
 
 
 
-    private func makeSUT(_ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: FeedStore) {
-        let store = FeedStore()
+    private func makeSUT(_ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
+        let store = SpyFeedStore()
         let sut = LocalFeedLoader(store)
         trackForMemoryLeaks(store, file: file, line: line)
         trackForMemoryLeaks(sut, file: file, line: line)
@@ -116,8 +119,7 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 }
 
-
-class FeedStore {
+final class SpyFeedStore: FeedStore {
 
     enum Operation: Equatable {
         case deletion
