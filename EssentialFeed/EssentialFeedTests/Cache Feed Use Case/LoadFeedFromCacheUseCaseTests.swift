@@ -17,8 +17,22 @@ class LocalFeedLoader {
         self.timeStamp = timeStamp
     }
 
-    func save(items: [FeedItem]) {
-        feedStore.deleteCachedFeed()
+    /// Simply what this API does is, given you want to save some items / response
+    /// it will try first to remove the cached response, if that succeeded...
+    ///  it will try to save the new items / response, if that succeeded
+    /// then operation done successfully
+
+    /// Save = Delete (❌,☑️) -> Insert (❌,☑️)
+
+    func save(items: [FeedItem], completion: @escaping (Error?) -> Void) {
+        feedStore.deleteCachedFeed { [weak self] error in
+            guard let self = self else { return }
+            if error == nil {
+                self.feedStore.insertFeed(items, completion: completion)
+            } else {
+                completion(error)
+            }
+        }
     }
 }
 
@@ -28,43 +42,70 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
     func test_init_doesNotDeleteCacheUponCreation () {
         let (_, store) = makeSUT()
 
-        XCTAssertEqual(store.deleteCacheCount, 0)
+        XCTAssertEqual(store.operations, [])
     }
 
     func test_save_requestsCacheDeletion() {
         let (sut, store) = makeSUT()
 
-        sut.save(items: [])
+        sut.save(items: []) { _ in }
 
-        XCTAssertEqual(store.deleteCacheCount, 1)
+        XCTAssertEqual(store.operations, [.deletion])
     }
 
     func test_save_doesNotRequestInsertOnCacheDeletionError() {
         let (sut, store) = makeSUT()
 
-        sut.save(items: [])
+        sut.save(items: []) { _ in }
         store.completeDeletionWithError(.anyNSError)
 
-        XCTAssertEqual(store.insertionCacheCount, 0)
-    }
-
-    func test_save_requestsInsertionOnCacheDeletionSuccess() {
-        let (sut, store) = makeSUT()
-
-        sut.save(items: [])
-        store.completeDeletionSuccessfully()
-        XCTAssertEqual(store.insertionCacheCount, 1)
+        XCTAssertEqual(store.operations, [.deletion])
     }
 
     func test_save_requestDeletionThenInsertionOnCacheDeletionSuccess() {
-        let (sut, loader) = makeSUT()
+        let (sut, store) = makeSUT()
 
-        sut.save(items: [])
-        loader.completeDeletionSuccessfully()
+        let items: [FeedItem] = [.unique, .unique]
+        sut.save(items: items) { _ in }
+        store.completeDeletionSuccessfully()
 
-        XCTAssertEqual(loader.operations.count, 2)
-        XCTAssertEqual(loader.operations, [.deletion, .insertion([])])
+        XCTAssertEqual(store.operations.count, 2)
+        XCTAssertEqual(store.operations, [.deletion, .insertion(items)])
     }
+
+    func test_save_deleteSuccess_InsertFail() {
+        let (sut, store) = makeSUT()
+
+        let expectedError: NSError = .anyNSError
+        let exp = expectation(description: "wait for insertion to complete")
+
+        sut.save(items: []) { error in
+            XCTAssertEqual(error as NSError?, expectedError)
+            exp.fulfill()
+        }
+
+        store.completeDeletionSuccessfully()
+        store.completeInsertionWithError(.anyNSError)
+
+        wait(for: [exp], timeout: 1.0)
+    }
+
+    func test_save_SuccessOnDeletionInsertionSuccess() {
+        let (sut, feedStore) = makeSUT()
+
+        let exp = expectation(description: "wait for all operations to finish")
+        sut.save(items: [.unique]) { error in
+            XCTAssertNil(error, "Save should success when Deletion and Insertion succeed")
+            exp.fulfill()
+        }
+
+        feedStore.completeDeletionSuccessfully()
+        feedStore.completeInsertionSuccessfully()
+
+        wait(for: [exp], timeout: 1.0)
+    }
+
+
 
     private func makeSUT(_ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: FeedStore) {
         let store = FeedStore()
@@ -75,9 +116,8 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 }
 
+
 class FeedStore {
-    private (set) var deleteCacheCount = 0
-    private (set) var insertionCacheCount = 0
 
     enum Operation: Equatable {
         case deletion
@@ -85,22 +125,50 @@ class FeedStore {
     }
 
     private(set) var operations = [Operation]()
+    private(set) var deletions = [(Error?) -> Void]()
+    private(set) var insertions = [(Error?) -> Void]()
 
-    func deleteCachedFeed() {
-        deleteCacheCount += 1
+
+    func deleteCachedFeed(completion: @escaping (Error?) -> Void) {
+        deletions.append(completion)
         operations.append(.deletion)
     }
 
-    func completeDeletionWithError(_ error: NSError) {
+    /// ⚡️ publisher to mirror the production behavior,
+    /// 🙉 Someone is listing to the operation (subscriber)
+    /// Here we are sending events to them 🚀
 
+    func completeDeletionWithError(_ error: NSError, at index: Int = 0) {
+        deletions[index](error)
     }
 
-    func completeDeletionSuccessfully() {
-        insertionCacheCount += 1
-        operations.append(.insertion([]))
+    func completeDeletionSuccessfully(at index: Int = 0) {
+        deletions[index](nil)
+    }
+
+
+    func insertFeed(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
+        operations.append(.insertion(items))
+        insertions.append(completion)
+    }
+
+    func completeInsertionWithError(_ error: NSError, at index: Int = 0) {
+        insertions[index](error)
+    }
+
+    func completeInsertionSuccessfully (at index: Int = 0) {
+        insertions[index](nil)
     }
 }
 
-private extension NSError{
+private extension NSError {
     static let anyNSError = NSError(domain: "any error", code: 0)
+}
+
+private extension FeedItem {
+    static let unique = FeedItem(
+        id: UUID(),
+        description: nil,
+        location: nil,
+        imageURL: .init(string: "https://image-url.com")!)
 }
