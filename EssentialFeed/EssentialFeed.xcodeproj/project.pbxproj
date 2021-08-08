@@ -116,8 +116,8 @@
 		1E4E4C7926BBC61100ECB9E6 /* Feed Cache */ = {
 			isa = PBXGroup;
 			children = (
-				1E4E4C7A26BBC63100ECB9E6 /* LocalFeedLoader.swift */,
 				1E05824426BD2508004934A2 /* FeedStore.swift */,
+				1E4E4C7A26BBC63100ECB9E6 /* LocalFeedLoader.swift */,
 			);
 			path = "Feed Cache";
 			sourceTree = "<group>";

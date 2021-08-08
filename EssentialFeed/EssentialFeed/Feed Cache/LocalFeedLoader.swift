@@ -29,22 +29,42 @@ public class LocalFeedLoader: CacheFeedLoader {
     /// Save = ☑️ Delete + ☑️ Insert
     /// Save = Delete (❌,☑️) -> Insert (❌,☑️)
 
+    // LocalFeedLoader Must work with FeedItem model, as it receives FeedItem from the other components e.g RemoteFeedLoader, so we should keep the API or the contract clean as it is.
+    // But when we save and communicate with FeedStore (the guy who will remove the old cache and insert the new FeedItem, we should add our own DTO thats related to caching module which is `LocalFeedItem`
+
     public func save(items: [FeedItem], completion: @escaping (CacheFeedResult) -> Void) {
         feedStore.deleteCachedFeed { [weak self] error in
             guard let self = self else { return }
             if let cacheDeletionError = error {
                 completion(cacheDeletionError)
             } else {
-                self.insert(items, with: completion)
+                self.insert(items.toLocal(), with: completion)
             }
         }
     }
 
     //MARK:- Helper method
-    private func insert(_ items: [FeedItem], with completion: @escaping (CacheFeedResult) -> Void) {
+    private func insert(_ items: [LocalFeedItem], with completion: @escaping (CacheFeedResult) -> Void) {
         feedStore.insertFeed(items, timeStamp: currentDate) { [weak self] error in
             guard self != nil else { return }
             completion(error)
         }
+    }
+}
+
+private extension Array where Element == FeedItem {
+    func toLocal() -> [LocalFeedItem] { map { LocalFeedItem($0) } }
+}
+
+
+
+public extension LocalFeedItem {
+    init(_ feedItem: FeedItem) {
+        self.init(
+            id: feedItem.id,
+            description: feedItem.description,
+            location: feedItem.location,
+            imageURL: feedItem.imageURL
+        )
     }
 }

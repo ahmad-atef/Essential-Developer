@@ -50,16 +50,18 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(expectedError, .anyNSError)
     }
 
-    // half testing for the happy case scenario
     func test_save_requestsNewCacheInsertionWithTimestampOnSuccessfulDeletion() {
         let timestamp = Date()
         let (sut, store) = makeSUT(currentDate: timestamp)
 
         let items: [FeedItem] = [.unique, .unique]
-        sut.save(items: items) { _ in }
+        let localFeedItems: [LocalFeedItem] = items.map { LocalFeedItem($0) }
+
+        sut.save(items: items) { _ in } // So we save [FeedItem]
         store.completeDeletionSuccessfully()
 
-        XCTAssertEqual(store.operations, [.deletion, .insertion(items, timestamp)])
+        // but we expect feedStore to insert [LocalFeedItem]
+        XCTAssertEqual(store.operations, [.deletion, .insertion(localFeedItems, timestamp)])
     }
 
     // insert failure
@@ -144,7 +146,7 @@ final class SpyFeedStore: FeedStore {
 
     enum Operation: Equatable {
         case deletion
-        case insertion([FeedItem], Date)
+        case insertion([LocalFeedItem], Date)
     }
 
     private(set) var operations = [Operation]()
@@ -170,7 +172,7 @@ final class SpyFeedStore: FeedStore {
     }
 
 
-    func insertFeed(_ items: [FeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void) {
+    func insertFeed(_ items: [LocalFeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void) {
         operations.append(.insertion(items, timeStamp))
         insertions.append(completion)
     }
