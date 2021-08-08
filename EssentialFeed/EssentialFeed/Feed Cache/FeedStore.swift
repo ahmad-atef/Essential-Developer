@@ -1,4 +1,4 @@
 public protocol FeedStore {
-    func deleteCachedFeed(completion: @escaping (LocalFeedLoader.SaveResult) -> Void)
-    func insertFeed(_ items: [FeedItem], timeStamp: Date, completion: @escaping (LocalFeedLoader.SaveResult) -> Void)
+    func deleteCachedFeed(completion: @escaping (CacheFeedResult) -> Void)
+    func insertFeed(_ items: [FeedItem], timeStamp: Date, completion: @escaping (CacheFeedResult) -> Void)
 }

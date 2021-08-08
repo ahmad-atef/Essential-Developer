@@ -5,11 +5,16 @@
 //  Created by Ahmed Atef Ali Ahmed on 05.08.21.
 //
 
-public class LocalFeedLoader {
+public typealias CacheFeedResult = Error?
+
+public protocol CacheFeedLoader {
+    func save(items: [FeedItem], completion: @escaping (CacheFeedResult) -> Void)
+}
+
+public class LocalFeedLoader: CacheFeedLoader {
     private let feedStore: FeedStore
     private let currentDate: Date
 
-    public typealias SaveResult = Error?
 
     public init(_ feedStore: FeedStore, currentDate: Date) {
         self.feedStore = feedStore
@@ -24,7 +29,7 @@ public class LocalFeedLoader {
     /// Save = ☑️ Delete + ☑️ Insert
     /// Save = Delete (❌,☑️) -> Insert (❌,☑️)
 
-    public func save(items: [FeedItem], completion: @escaping (SaveResult) -> Void) {
+    public func save(items: [FeedItem], completion: @escaping (CacheFeedResult) -> Void) {
         feedStore.deleteCachedFeed { [weak self] error in
             guard let self = self else { return }
             if let cacheDeletionError = error {
@@ -36,7 +41,7 @@ public class LocalFeedLoader {
     }
 
     //MARK:- Helper method
-    private func insert(_ items: [FeedItem], with completion: @escaping (SaveResult) -> Void) {
+    private func insert(_ items: [FeedItem], with completion: @escaping (CacheFeedResult) -> Void) {
         feedStore.insertFeed(items, timeStamp: currentDate) { [weak self] error in
             guard self != nil else { return }
             completion(error)
