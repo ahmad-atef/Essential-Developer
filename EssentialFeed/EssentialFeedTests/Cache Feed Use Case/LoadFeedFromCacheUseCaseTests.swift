@@ -54,14 +54,18 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let timestamp = Date()
         let (sut, store) = makeSUT(currentDate: timestamp)
 
-        let items: [FeedItem] = [.unique, .unique]
-        let localFeedItems: [LocalFeedItem] = items.map { LocalFeedItem($0) }
-
-        sut.save(items: items) { _ in } // So we save [FeedItem]
+        let items = uniqueItems()
+        sut.save(items: items.model) { _ in } // So we save [FeedItem]
         store.completeDeletionSuccessfully()
 
         // but we expect feedStore to insert [LocalFeedItem]
-        XCTAssertEqual(store.operations, [.deletion, .insertion(localFeedItems, timestamp)])
+        XCTAssertEqual(store.operations, [.deletion, .insertion(items.local, timestamp)])
+    }
+
+    private func uniqueItems() -> (model: [FeedItem], local: [LocalFeedItem]) {
+        let items: [FeedItem] = [.unique, .unique]
+        let localFeedItems: [LocalFeedItem] = items.map { LocalFeedItem($0) }
+        return(items, localFeedItems)
     }
 
     // insert failure
@@ -87,7 +91,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let (sut, feedStore) = makeSUT(currentDate: timeStamp)
 
         let exp = expectation(description: "wait for all operations to finish")
-        sut.save(items: [.unique]) { error in
+        sut.save(items: uniqueItems().model) { error in
             XCTAssertNil(error, "Save should success when Deletion and Insertion succeed")
             exp.fulfill()
         }
