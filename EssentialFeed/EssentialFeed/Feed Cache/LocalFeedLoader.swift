@@ -5,12 +5,6 @@
 //  Created by Ahmed Atef Ali Ahmed on 05.08.21.
 //
 
-public typealias CacheFeedResult = Error?
-
-public protocol CacheFeedLoader {
-    func save(items: [FeedItem], completion: @escaping (CacheFeedResult) -> Void)
-}
-
 public class LocalFeedLoader: CacheFeedLoader {
     private let feedStore: FeedStore
     private let currentDate: Date
