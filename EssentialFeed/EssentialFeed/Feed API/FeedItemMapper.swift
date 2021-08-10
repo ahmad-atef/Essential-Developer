@@ -9,19 +9,14 @@ final class FeedItemMapper {
 
     private static let OK_200: Int = 200
 
-    static func map (_ data: Data, _ response: HTTPURLResponse) -> FeedLoaderResult {
+    // tries to map to RemoteFeedItem from data, response :)
+
+    static func map (_ data: Data, _ response: HTTPURLResponse) throws -> [RemoteFeedItem] {
         guard response.statusCode == OK_200,
               let root = try? JSONDecoder().decode(Root.self, from: data) else {
-            return .failure(RemoteFeedLoader.Error.invalidData)
+            throw RemoteFeedLoader.Error.invalidData
         }
-        return (.success(root.feed))
-    }
-
-    private struct Root: Decodable {
-        let items: [Item]
-        var feed: [FeedItem] {
-            items.map( { $0.item } )
-        }
+        return root.items
     }
 
     // Separate module that represents the API version of the FeedItem 👌🤩
@@ -31,20 +26,10 @@ final class FeedItemMapper {
     // The API replied with image only 🥲
     // So no problem, will keep the right naming in the generic domain FeedItem, and make a private type in the middle to do that ugly naming for us, with out polluting the generic type 😼
 
-    /// Transitional representation of FeedItem that specific of the API module.
-    private struct Item: Decodable {
-        let id: UUID
-        let description: String?
-        let location: String?
-        let image: URL
-
-        var item: FeedItem {
-            .init(
-                id: id,
-                description: description,
-                location: location,
-                imageURL: image
-            )
-        }
+    // we created this private struct just for one reason, to mirror the response from the API
+    // so we have a Root response which contains a key called `items`
+    // each item should be `RemoteFeedItem` 👍
+    private struct Root: Decodable {
+        let items: [RemoteFeedItem]
     }
 }

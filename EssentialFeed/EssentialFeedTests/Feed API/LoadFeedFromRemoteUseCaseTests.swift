@@ -226,11 +226,14 @@ final class HTTPSpyClient: HTTPClient {
     // as a result for that request.
     typealias Message = (url: URL, completion: (ClientResult) -> Void)
 
+    // logger, everything (any request with its result) will be recorded here
+    var messages: [Message] = []
+
+
     var requestedURLs: [URL] {
         messages.map { $0.url }
     }
 
-    var messages: [Message] = []
 
     func get(from url: URL, completion: @escaping (ClientResult) -> Void) {
         messages.append((url, completion))
