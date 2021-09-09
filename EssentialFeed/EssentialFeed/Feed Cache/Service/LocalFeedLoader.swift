@@ -1,10 +1,3 @@
-//
-//  LocalFeedLoader.swift
-//  EssentialFeed
-//
-//  Created by Ahmed Atef Ali Ahmed on 05.08.21.
-//
-
 /*
 --------------------------------------------------------------
  Narrative:
@@ -21,8 +14,6 @@ Then the app should display the latest feed from remote
 And replace the cache with the new feed
 
 */
-
-
 
 public class LocalFeedLoader: CacheFeedLoader {
     private let feedStore: FeedStore
@@ -68,8 +59,6 @@ public class LocalFeedLoader: CacheFeedLoader {
 private extension Array where Element == FeedItem {
     func toLocal() -> [LocalFeedItem] { map { LocalFeedItem($0) } }
 }
-
-
 
 public extension LocalFeedItem {
     init(_ feedItem: FeedItem) {
