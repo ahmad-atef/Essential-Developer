@@ -60,13 +60,10 @@ private extension Array where Element == FeedItem {
     func toLocal() -> [LocalFeedItem] { map { LocalFeedItem($0) } }
 }
 
-public extension LocalFeedItem {
-    init(_ feedItem: FeedItem) {
-        self.init(
-            id: feedItem.id,
-            description: feedItem.description,
-            location: feedItem.location,
-            imageURL: feedItem.imageURL
-        )
+
+
+extension LocalFeedLoader {
+    public func loadItems(completion: @escaping (Result<FeedItem, Error>) -> Void) {
+
     }
 }
