@@ -16,12 +16,12 @@ And replace the cache with the new feed
 */
 
 public class LocalFeedLoader: CacheFeedLoader {
-    private let feedStore: FeedStore
+    private let store: FeedStore
     private let currentDate: Date
 
 
     public init(_ feedStore: FeedStore, currentDate: Date) {
-        self.feedStore = feedStore
+        self.store = feedStore
         self.currentDate = currentDate
     }
 
@@ -37,7 +37,7 @@ public class LocalFeedLoader: CacheFeedLoader {
     // But when we save and communicate with FeedStore (the guy who will remove the old cache and insert the new FeedItem, we should add our own DTO thats related to caching module which is `LocalFeedItem`
 
     public func save(items: [FeedItem], completion: @escaping (CacheFeedResult) -> Void) {
-        feedStore.deleteCachedFeed { [weak self] error in
+        store.deleteCachedFeed { [weak self] error in
             guard let self = self else { return }
             if let cacheDeletionError = error {
                 completion(cacheDeletionError)
@@ -49,7 +49,7 @@ public class LocalFeedLoader: CacheFeedLoader {
 
     //MARK:- Helper method
     private func insert(_ items: [LocalFeedItem], with completion: @escaping (CacheFeedResult) -> Void) {
-        feedStore.insertFeed(items, timeStamp: currentDate) { [weak self] error in
+        store.insertFeed(items, timeStamp: currentDate) { [weak self] error in
             guard self != nil else { return }
             completion(error)
         }
@@ -62,8 +62,40 @@ private extension Array where Element == FeedItem {
 
 
 
-extension LocalFeedLoader {
-    public func loadItems(completion: @escaping (Result<FeedItem, Error>) -> Void) {
+/*
+--------------------------------------------------------------
+Narrative:
+--------------------------------------------------------------
+As an offline customer
+I want the app to show the latest saved version of my image feed
+So I can always enjoy images of my friends
 
+--------------------------------------------------------------
+Scenarios (Acceptance criteria)
+--------------------------------------------------------------
+Given the customer doesn't have connectivity
+And there’s a cached version of the feed
+And the cache is less than seven days old
+When the customer requests to see the feed
+Then the app should display the latest feed saved
+
+Given the customer doesn't have connectivity
+And there’s a cached version of the feed
+And the cache is seven days old or more
+When the customer requests to see the feed
+Then the app should display an error message
+
+Given the customer doesn't have connectivity
+And the cache is empty
+When the customer requests to see the feed
+Then the app should display an error message
+
+*/
+
+
+extension LocalFeedLoader {
+    /// Use this command to load Feed from cache, the cached Feed shouldn't be expired.
+    public func loadItems(completion: @escaping (Result<LocalFeedItem, Error>) -> Void) {
+        store.reteriveFeed(completion: completion)
     }
 }
