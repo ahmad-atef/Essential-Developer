@@ -35,14 +35,13 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     // test_save_failsOnDeletionError
     func test_save_doesNotRequestCacheInsertionOnDeletionError() {
         let (sut, store) = makeSUT()
-
         var expectedError: NSError = .anyNSError
         let exp = expectation(description: "")
+
         sut.save(items: []) { error in
             expectedError = error! as NSError
             exp.fulfill()
         }
-
         store.completeDeletionWithError(.anyNSError)
         wait(for: [exp], timeout: 1.0)
 
