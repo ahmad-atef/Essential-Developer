@@ -145,9 +145,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 }
 
-private extension NSError {
-    static let anyNSError = NSError(domain: "any error", code: 0)
-}
+
 
 private extension FeedItem {
     static let unique = FeedItem(

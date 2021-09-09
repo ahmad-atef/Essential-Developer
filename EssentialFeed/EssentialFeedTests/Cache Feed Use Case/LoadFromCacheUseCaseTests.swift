@@ -18,7 +18,26 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.retrieval])
     }
 
-    func testLoadCommandFailsWhen
+    func testLoadCommandFailsWhenStoreFailsToRetrieve() {
+        let (service, store) = makeSUT()
+
+        var receivedError: NSError?
+        let expectation = expectation(description: "wait for completion")
+
+        service.loadItems { result in
+            guard case .failure(let error) = result else {
+                XCTFail()
+                preconditionFailure()
+            }
+            receivedError = error as NSError
+            expectation.fulfill()
+        }
+        
+        store.completeRetrievalWithError(.anyNSError)
+        wait(for: [expectation], timeout: 1.0)
+
+        XCTAssertEqual(receivedError, .anyNSError)
+    }
 }
 
 extension LoadFromCacheUseCaseTests {
