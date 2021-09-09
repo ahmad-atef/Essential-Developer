@@ -52,7 +52,7 @@ final class SpyFeedStore: FeedStore {
         insertions[index](nil)
     }
 
-    func reteriveFeed(completion: @escaping (Result<LocalFeedItem, Error>) -> Void) {
+    func retrieveFeed(completion: @escaping (Result<LocalFeedItem, Error>) -> Void) {
         operations.append(.retrieval)
     }
 }

@@ -17,6 +17,8 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
 
         XCTAssertEqual(store.operations, [.retrieval])
     }
+
+    func testLoadCommandFailsWhen
 }
 
 extension LoadFromCacheUseCaseTests {

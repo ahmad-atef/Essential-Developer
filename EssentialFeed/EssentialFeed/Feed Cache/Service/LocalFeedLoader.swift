@@ -96,6 +96,6 @@ Then the app should display an error message
 extension LocalFeedLoader {
     /// Use this command to load Feed from cache, the cached Feed shouldn't be expired.
     public func loadItems(completion: @escaping (Result<LocalFeedItem, Error>) -> Void) {
-        store.reteriveFeed(completion: completion)
+        store.retrieveFeed(completion: completion)
     }
 }
