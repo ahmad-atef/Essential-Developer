@@ -1,12 +1,15 @@
-//
-//  LoadFromCacheUseCaseTests.swift
-//  EssentialFeedTests
-//
-//  Created by Ahmed Atef Ali Ahmed on 09.09.21.
-//
-
 import XCTest
 import EssentialFeed
+
+// Store can do the following operations:
+// `insert`
+// `delete`
+// `retrieve`
+
+// Service have two commands / API
+// - loadItems
+// - saveItems
+
 
 final class LoadFromCacheUseCaseTests: XCTestCase {
 
@@ -38,6 +41,24 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
 
         XCTAssertEqual(receivedError, .anyNSError)
     }
+
+    func testLoadCommandShouldSuccessWhenStoreRetrievalSuccess() {
+        let (service, store) = makeSUT()
+
+        let expectation = expectation(description: "waiting for completion")
+        var receivedItems: [LocalFeedItem]?
+
+        service.loadItems { result in
+            guard case .success(let items) = result else { preconditionFailure() }
+            receivedItems = items
+            expectation.fulfill()
+        }
+
+        let items = uniqueItems().local
+        store.completeRetrievalSuccessfullyWithItems(items)
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(receivedItems, items)
+    }
 }
 
 extension LoadFromCacheUseCaseTests {
@@ -47,5 +68,11 @@ extension LoadFromCacheUseCaseTests {
         trackForMemoryLeaks(store, file: file, line: line)
         trackForMemoryLeaks(sut, file: file, line: line)
         return (sut, store)
+    }
+
+    private func uniqueItems() -> (model: [FeedItem], local: [LocalFeedItem]) {
+        let items: [FeedItem] = [.unique, .unique]
+        let localFeedItems: [LocalFeedItem] = items.map { LocalFeedItem($0) }
+        return(items, localFeedItems)
     }
 }
