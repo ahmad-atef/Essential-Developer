@@ -42,6 +42,23 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(receivedError, .anyNSError)
     }
 
+    func testLoadCommandDeliversNoImagesOnEmptyCache() {
+        let (service, store) = makeSUT()
+
+        let expectation = expectation(description: "waiting for completion")
+        var receivedItems: [LocalFeedItem]?
+
+        service.loadItems { result in
+            guard case .success(let items) = result else { preconditionFailure() }
+            receivedItems = items
+            expectation.fulfill()
+        }
+
+        store.completeRetrievalSuccessfullyWithItems([])
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(receivedItems, [])
+    }
+
     func testLoadCommandShouldSuccessWhenStoreRetrievalSuccess() {
         let (service, store) = makeSUT()
 
