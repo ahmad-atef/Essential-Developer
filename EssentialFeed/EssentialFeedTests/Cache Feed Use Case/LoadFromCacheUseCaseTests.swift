@@ -23,58 +23,25 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
 
     func testLoadCommandFailsWhenStoreFailsToRetrieve() {
         let (service, store) = makeSUT()
-
-        var receivedError: NSError?
-        let expectation = expectation(description: "wait for completion")
-
-        service.loadItems { result in
-            guard case .failure(let error) = result else {
-                XCTFail()
-                preconditionFailure()
-            }
-            receivedError = error as NSError
-            expectation.fulfill()
+        expect(service, toCompleteLoadingWith: .failure(NSError.anyNSError)) {
+            store.completeRetrievalWithError(NSError.anyNSError)
         }
-        
-        store.completeRetrievalWithError(.anyNSError)
-        wait(for: [expectation], timeout: 1.0)
-
-        XCTAssertEqual(receivedError, .anyNSError)
     }
 
     func testLoadCommandDeliversNoImagesOnEmptyCache() {
         let (service, store) = makeSUT()
-
-        let expectation = expectation(description: "waiting for completion")
-        var receivedItems: [LocalFeedItem]?
-
-        service.loadItems { result in
-            guard case .success(let items) = result else { preconditionFailure() }
-            receivedItems = items
-            expectation.fulfill()
+        expect(service, toCompleteLoadingWith: .success([])) {
+            store.completeRetrievalSuccessfullyWithItems([])
         }
-
-        store.completeRetrievalSuccessfullyWithItems([])
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(receivedItems, [])
     }
 
     func testLoadCommandShouldSuccessWhenStoreRetrievalSuccess() {
         let (service, store) = makeSUT()
-
-        let expectation = expectation(description: "waiting for completion")
-        var receivedItems: [LocalFeedItem]?
-
-        service.loadItems { result in
-            guard case .success(let items) = result else { preconditionFailure() }
-            receivedItems = items
-            expectation.fulfill()
-        }
-
         let items = uniqueItems().local
-        store.completeRetrievalSuccessfullyWithItems(items)
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(receivedItems, items)
+
+        expect(service, toCompleteLoadingWith: .success(items)) {
+            store.completeRetrievalSuccessfullyWithItems(items)
+        }
     }
 }
 
@@ -85,6 +52,24 @@ extension LoadFromCacheUseCaseTests {
         trackForMemoryLeaks(store, file: file, line: line)
         trackForMemoryLeaks(sut, file: file, line: line)
         return (sut, store)
+    }
+
+    private func expect(_ sut: LocalFeedLoader, toCompleteLoadingWith expectedResult: LoadFeedResult, onAction action: () -> Void ) {
+        let expectation = expectation(description: "waiting for completion")
+        sut.loadItems { receivedResult in
+            switch (receivedResult, expectedResult) {
+            case (.success(let receivedItems), .success(let expectedItems)):
+                XCTAssertEqual(receivedItems, expectedItems)
+            case (.failure(let receivedError), .failure(let expectedError)):
+                XCTAssertEqual(receivedError as NSError, expectedError as NSError)
+            default:
+                XCTFail("Expected result \(expectedResult), got \(receivedResult) instead")
+            }
+            expectation.fulfill()
+        }
+
+        action()
+        wait(for: [expectation], timeout: 1.0)
     }
 
     private func uniqueItems() -> (model: [FeedItem], local: [LocalFeedItem]) {
