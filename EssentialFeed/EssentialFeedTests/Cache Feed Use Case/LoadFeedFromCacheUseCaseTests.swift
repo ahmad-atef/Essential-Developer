@@ -144,13 +144,3 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         return (sut, store)
     }
 }
-
-
-
-private extension FeedItem {
-    static let unique = FeedItem(
-        id: UUID(),
-        description: nil,
-        location: nil,
-        imageURL: .init(string: "https://image-url.com")!)
-}
