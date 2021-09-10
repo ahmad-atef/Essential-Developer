@@ -98,10 +98,12 @@ extension LocalFeedLoader {
     public func loadItems(completion: @escaping (LoadFeedResult) -> Void) {
         store.retrieveFeed { result in
             switch result {
+            case .empty:
+                completion(.success([]))
+            case .found(let items, timeStamped: _):
+                completion(.success(items))
             case .failure(let error):
                 completion(.failure(error))
-            case .success(let items):
-                completion(.success(items))
             }
         }
     }

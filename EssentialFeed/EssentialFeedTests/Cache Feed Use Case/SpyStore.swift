@@ -19,7 +19,7 @@ final class SpyFeedStore: FeedStore {
     private(set) var operations = [Operation]()
     private var deletions = [(Error?) -> Void]()
     private var insertions = [(Error?) -> Void]()
-    private var retrievals = [(LoadFeedResult) -> Void]()
+    private var retrievals = [(RetrieveFeedResult) -> Void]()
 
 
     // Delete operations
@@ -56,7 +56,7 @@ final class SpyFeedStore: FeedStore {
     }
 
     // Retrieve Operations
-    func retrieveFeed(completion: @escaping (LoadFeedResult) -> Void) {
+    func retrieveFeed(completion: @escaping (RetrieveFeedResult) -> Void) {
         operations.append(.retrieval)
         retrievals.append(completion)
     }
@@ -65,7 +65,7 @@ final class SpyFeedStore: FeedStore {
         retrievals[index](.failure(error))
     }
 
-    func completeRetrievalSuccessfullyWithItems(_ items: [LocalFeedItem], at index: Int = 0) {
-        retrievals[index](.success(items))
+    func completeRetrievalSuccessfullyWithItems(_ items: [LocalFeedItem], timeStamp: Date = Date(), at index: Int = 0) {
+        retrievals[index](.found(items: items, timeStamped: timeStamp))
     }
 }

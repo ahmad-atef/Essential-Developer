@@ -43,6 +43,16 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
             store.completeRetrievalSuccessfullyWithItems(items)
         }
     }
+
+    func testLoadCommandDeliversCachedImagesOnLessThanSevenDaysOldCache() {
+        let (service, store) = makeSUT()
+        let items = uniqueItems().local
+        let lessThanSevenDaysTimeStamp = Date().changeTime(byAddingDays: -7, seconds: 1)
+
+        expect(service, toCompleteLoadingWith: .success(items)) {
+            store.completeRetrievalSuccessfullyWithItems(items, timeStamp: lessThanSevenDaysTimeStamp)
+        }
+    }
 }
 
 extension LoadFromCacheUseCaseTests {
