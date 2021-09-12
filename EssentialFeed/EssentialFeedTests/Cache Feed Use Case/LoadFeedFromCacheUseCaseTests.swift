@@ -35,14 +35,13 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     // test_save_failsOnDeletionError
     func test_save_doesNotRequestCacheInsertionOnDeletionError() {
         let (sut, store) = makeSUT()
-
         var expectedError: NSError = .anyNSError
         let exp = expectation(description: "")
+
         sut.save(items: []) { error in
             expectedError = error! as NSError
             exp.fulfill()
         }
-
         store.completeDeletionWithError(.anyNSError)
         wait(for: [exp], timeout: 1.0)
 
@@ -144,60 +143,4 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         trackForMemoryLeaks(sut, file: file, line: line)
         return (sut, store)
     }
-}
-
-final class SpyFeedStore: FeedStore {
-
-    enum Operation: Equatable {
-        case deletion
-        case insertion([LocalFeedItem], Date)
-    }
-
-    private(set) var operations = [Operation]()
-    private var deletions = [(Error?) -> Void]()
-    private var insertions = [(Error?) -> Void]()
-
-
-    func deleteCachedFeed(completion: @escaping (Error?) -> Void) {
-        deletions.append(completion)
-        operations.append(.deletion)
-    }
-
-    /// ⚡️ publisher to mirror the production behavior,
-    /// 🙉 Someone is listing to the operation (subscriber)
-    /// Here we are sending events to them 🚀
-
-    func completeDeletionWithError(_ error: NSError, at index: Int = 0) {
-        deletions[index](error)
-    }
-
-    func completeDeletionSuccessfully(at index: Int = 0) {
-        deletions[index](nil)
-    }
-
-
-    func insertFeed(_ items: [LocalFeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void) {
-        operations.append(.insertion(items, timeStamp))
-        insertions.append(completion)
-    }
-
-    func completeInsertionWithError(_ error: NSError, at index: Int = 0) {
-        insertions[index](error)
-    }
-
-    func completeInsertionSuccessfully (at index: Int = 0) {
-        insertions[index](nil)
-    }
-}
-
-private extension NSError {
-    static let anyNSError = NSError(domain: "any error", code: 0)
-}
-
-private extension FeedItem {
-    static let unique = FeedItem(
-        id: UUID(),
-        description: nil,
-        location: nil,
-        imageURL: .init(string: "https://image-url.com")!)
 }
