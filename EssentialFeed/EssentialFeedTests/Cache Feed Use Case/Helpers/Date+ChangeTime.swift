@@ -9,7 +9,6 @@ import Foundation
 
 extension Date {
     public func changeTime(byAddingDays days: Int, seconds: Int) -> Date {
-
         var dateComponent = DateComponents()
         dateComponent.day = days
         dateComponent.second = seconds

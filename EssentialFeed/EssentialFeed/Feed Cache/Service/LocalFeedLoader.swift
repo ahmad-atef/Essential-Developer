@@ -18,7 +18,7 @@ And replace the cache with the new feed
 public class LocalFeedLoader: CacheFeedLoader {
     private let store: FeedStore
     private let currentDate: Date
-
+    private let calendar = Calendar(identifier: .gregorian)
 
     public init(_ feedStore: FeedStore, currentDate: Date) {
         self.store = feedStore
@@ -96,15 +96,20 @@ Then the app should display an error message
 extension LocalFeedLoader {
     /// Use this command to load Feed from cache, the cached Feed shouldn't be expired.
     public func loadItems(completion: @escaping (LoadFeedResult) -> Void) {
-        store.retrieveFeed { result in
+        store.retrieveFeed { [unowned self] result in
             switch result {
-            case .empty:
-                completion(.success([]))
-            case .found(let items, timeStamped: _):
-                completion(.success(items))
             case .failure(let error):
                 completion(.failure(error))
+            case .found(let items, let timeStamp) where self.cacheIsNotExpired(timeStamp):
+                completion(.success(items))
+            case .empty, .found:
+                completion(.success([]))
             }
         }
+    }
+    
+    private func cacheIsNotExpired(_ timeStamp: Date) -> Bool {
+        guard let daysDiff = calendar.dateComponents([.day], from: timeStamp, to: currentDate).day else { return false }
+        return daysDiff < 7
     }
 }

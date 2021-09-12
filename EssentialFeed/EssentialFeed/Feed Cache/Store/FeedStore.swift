@@ -1,7 +1,7 @@
 public enum RetrieveFeedResult {
     case empty
     case failure(Error)
-    case found(items: [LocalFeedItem], timeStamped: Date)
+    case found([LocalFeedItem], Date)
 }
 
 public protocol FeedStore {

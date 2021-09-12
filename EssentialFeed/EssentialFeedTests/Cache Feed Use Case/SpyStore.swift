@@ -66,6 +66,6 @@ final class SpyFeedStore: FeedStore {
     }
 
     func completeRetrievalSuccessfullyWithItems(_ items: [LocalFeedItem], timeStamp: Date = Date(), at index: Int = 0) {
-        retrievals[index](.found(items: items, timeStamped: timeStamp))
+        retrievals[index](.found(items, timeStamp))
     }
 }
