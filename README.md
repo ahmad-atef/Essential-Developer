@@ -1,92 +1,61 @@
-# essentialdeveloper
+# Essential App Case Study
 
-# Assert for Specific Error:
-
----
-
-- `Loader:` is the responsibility that should ***`load`*** the data from a **`URL`**
-- `Client:` is the responsibility that should ***`request`*** the data from a **`URL`**
-- `Loader` has a `Client` + `URL` as a destination point.
-- Client should have dependency thorough a function, so when you call the request method on client, you should pass the URL, which is configured from the loader.
-- Client can fail, so it should return completion handler with Result <Item, Error>
-- The error type that can return from Client should be Generic.
-- Loader also should have a completion handler with Specific Domain Error type.
+## Feature: Image Feed Features Specs
 
 
-### Narrative #2
+### Story: Customer requests to see their image feed
+
+
+### Narrative: #1
+
+```
+As online customer
+I want the app to automatically load my latest images of my friends
+So I can always enjoy the newst image of my friends.
+```
+
+#### Scenarios (Acceptance criteria)
+
+```
+Given the customer has connectiviy
+ When the customer requests to see their feed
+ Then the app should display the latests feed from remote
+  And replace the cache with the new feed.
+```
+
+### Narrative: #2
 
 ```
 As an offline customer
 I want the app to show the latest saved version of my image feed
-So I can always enjoy images of my friends
+So I can always enjoy images of my friends.
 ```
 
 #### Scenarios (Acceptance criteria)
 
 ```
 Given the customer doesn't have connectivity
-  And there’s a cached version of the feed
-  And the cache is less than seven days old
+  And there's a cached version of the feed
+  And the cache is less than 7 days old
  When the customer requests to see the feed
- Then the app should display the latest feed saved
+ Then the app should display the latested feed from cache.
 
-Given the customer doesn't have connectivity
-  And there’s a cached version of the feed
-  And the cache is seven days old or more
+Given the customer doesn't have connectiviry
+  And there's a cached version of the feed
+  And the cache is 7 days old or more
  When the customer requests to see the feed
- Then the app should display an error message
+ Then the app should display an error message.
 
 Given the customer doesn't have connectivity
   And the cache is empty
- When the customer requests to see the feed
- Then the app should display an error message
+ When the customer requests to see thier feed
+ Then the app should display an error message.
+
 ```
 
 ## Use Cases
 
-### Load Feed From Remote Use Case
-
-#### Data:
-- URL
-
-#### Primary course (happy path):
-1. Execute "Load Image Feed" command with above data.
-2. System downloads data from the URL.
-3. System validates downloaded data.
-4. System creates image feed from valid data.
-5. System delivers image feed.
-
-#### Invalid data – error course (sad path):
-1. System delivers invalid data error.
-
-#### No connectivity – error course (sad path):
-1. System delivers connectivity error.
-
----
-
-### Load Feed Image Data From Remote Use Case
-
-#### Data:
-- URL
-
-#### Primary course (happy path):
-1. Execute "Load Image Data" command with above data.
-2. System downloads data from the URL.
-3. System validates downloaded data.
-4. System delivers image data.
-
-#### Cancel course:
-1. System does not deliver image data nor error.
-
-#### Invalid data – error course (sad path):
-1. System delivers invalid data error.
-
-#### No connectivity – error course (sad path):
-1. System delivers connectivity error.
-
----
-
-### Load Feed From Cache Use Case
+### Load Feed From Cache Use Case (Service layer)
 
 #### Primary course:
 1. Execute "Load Image Feed" command with above data.
