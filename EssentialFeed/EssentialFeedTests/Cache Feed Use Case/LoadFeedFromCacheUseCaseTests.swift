@@ -101,6 +101,20 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
     }
 
+    func test_load_deleteCacheOnRetrievalError() {
+
+        // Given
+        let (sut, store) = makeSUT()
+
+        // When
+        sut.loadItems { _ in }
+        store.completeRetrievalWithError(.anyNSError)
+
+        // Then
+        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+
+    }
+
     func test_deallocation_behavior_onDeleteCacheError() {
         let feedStore = SpyFeedStore()
         var localFeedLoader: LocalFeedLoader? = .init(feedStore, currentDate: .init())

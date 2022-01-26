@@ -99,6 +99,7 @@ extension LocalFeedLoader {
         store.retrieveFeed { [unowned self] result in
             switch result {
             case .failure(let error):
+                self.store.deleteCachedFeed(completion: { _ in })
                 completion(.failure(error))
             case .found(let items, let timeStamp) where self.cacheIsNotExpired(timeStamp):
                 completion(.success(items))
