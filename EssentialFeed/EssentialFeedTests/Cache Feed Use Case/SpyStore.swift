@@ -66,6 +66,10 @@ final class SpyFeedStore: FeedStore {
         retrievals[index](.failure(error))
     }
 
+    func completeRetrievalWithEmpty(at index: Int = 0) {
+        retrievals[index](.empty)
+    }
+
     func completeRetrievalSuccessfullyWithItems(_ items: [LocalFeedItem], timeStamp: Date = Date(), at index: Int = 0) {
         retrievals[index](.found(items, timeStamp))
     }
