@@ -114,7 +114,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.retrieval, .deletion])
     }
 
-    func test_load_shouldNotClearCacheIfCacheWasAlreadyEmpty() {
+    func test_load_shouldNotClearCacheIfCacheWasEmpty() {
         // Given
         let (sut, store) = makeSUT()
 
@@ -124,7 +124,21 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
 
         // Then
         XCTAssertEqual(store.operations, [.retrieval])
+    }
 
+    // If cache is valid (not expired), then the load command shouldn't Clear cache, but do Insert operation.
+    func test_load_shouldNotClearValidCache() {
+
+        // Given
+        let currentDate = Date()
+        let (sut, store) = makeSUT(currentDate: currentDate)
+        let validTimestamp = currentDate.changeTime(byAddingDays: -7, seconds: 1) // one second after seven days old.
+        let localFeedItem: LocalFeedItem = .unique
+
+        sut.loadItems(completion: { _ in })
+        store.completeRetrievalSuccessfullyWithItems([localFeedItem], timeStamp: validTimestamp)
+
+        XCTAssertEqual(store.operations, [.retrieval])
     }
 
     func test_deallocation_behavior_onDeleteCacheError() {

@@ -17,7 +17,7 @@ And replace the cache with the new feed
 
 public class LocalFeedLoader: CacheFeedLoader {
     private let store: FeedStore
-    private let currentDate: Date
+    private let currentDate: Date // start point to compare 🧑‍⚖️
     private let calendar = Calendar(identifier: .gregorian)
 
     public init(_ feedStore: FeedStore, currentDate: Date) {
