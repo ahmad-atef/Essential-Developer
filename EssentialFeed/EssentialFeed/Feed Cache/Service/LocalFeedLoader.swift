@@ -17,7 +17,7 @@ And replace the cache with the new feed
 
 public class LocalFeedLoader: CacheFeedLoader {
     private let store: FeedStore
-    private let currentDate: Date
+    private let currentDate: Date // start point to compare 🧑‍⚖️
     private let calendar = Calendar(identifier: .gregorian)
 
     public init(_ feedStore: FeedStore, currentDate: Date) {
@@ -95,14 +95,21 @@ Then the app should display an error message
 
 extension LocalFeedLoader {
     /// Use this command to load Feed from cache, the cached Feed shouldn't be expired.
-    public func loadItems(completion: @escaping (LoadFeedResult) -> Void) {
-        store.retrieveFeed { [unowned self] result in
+
+    // Query should NOT have a side effect, `retrieve` or `load` should only Load, i.e no other logic should be included like cache invalidation or anything else, this is whats called CQS: Command Query Separation 👌
+    public func loadItems(completion: @escaping (LocalFeedResult) -> Void) {
+        store.retrieveFeed { [weak self] result in
+            guard let self = self else { return }
             switch result {
             case .failure(let error):
+                self.store.deleteCachedFeed(completion: { _ in })
                 completion(.failure(error))
             case .found(let items, let timeStamp) where self.cacheIsNotExpired(timeStamp):
                 completion(.success(items))
-            case .empty, .found:
+            case .empty:
+                completion(.success([]))
+            case .found: // Store contains expired items.
+                self.store.deleteCachedFeed(completion: { _ in })
                 completion(.success([]))
             }
         }

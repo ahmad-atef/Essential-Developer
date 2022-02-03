@@ -17,6 +17,7 @@ final class SpyFeedStore: FeedStore {
     }
 
     private(set) var operations = [Operation]()
+
     private var deletions = [(Error?) -> Void]()
     private var insertions = [(Error?) -> Void]()
     private var retrievals = [(RetrieveFeedResult) -> Void]()
@@ -28,7 +29,7 @@ final class SpyFeedStore: FeedStore {
         operations.append(.deletion)
     }
 
-    /// ⚡️ publisher to mirror the production behavior,
+    /// ⚡️ publisher to mirror the production behaviour,
     /// 🙉 Someone is listing to the operation (subscriber)
     /// Here we are sending events to them 🚀
 
@@ -63,6 +64,10 @@ final class SpyFeedStore: FeedStore {
 
     func completeRetrievalWithError(_ error: NSError, at index: Int = 0) {
         retrievals[index](.failure(error))
+    }
+
+    func completeRetrievalWithEmpty(at index: Int = 0) {
+        retrievals[index](.empty)
     }
 
     func completeRetrievalSuccessfullyWithItems(_ items: [LocalFeedItem], timeStamp: Date = Date(), at index: Int = 0) {

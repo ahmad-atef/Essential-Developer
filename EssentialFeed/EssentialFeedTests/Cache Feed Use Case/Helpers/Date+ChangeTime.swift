@@ -8,7 +8,7 @@
 import Foundation
 
 extension Date {
-    public func changeTime(byAddingDays days: Int, seconds: Int) -> Date {
+    public func changeTime(byAddingDays days: Int, seconds: Int = 0) -> Date {
         var dateComponent = DateComponents()
         dateComponent.day = days
         dateComponent.second = seconds

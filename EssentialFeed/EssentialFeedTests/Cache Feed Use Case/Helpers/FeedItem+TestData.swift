@@ -15,3 +15,4 @@ public extension FeedItem {
         location: nil,
         imageURL: .init(string: "https://image-url.com")!)
 }
+
