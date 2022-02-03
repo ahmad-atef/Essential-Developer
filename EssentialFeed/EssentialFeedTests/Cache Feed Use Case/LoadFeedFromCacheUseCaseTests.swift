@@ -150,7 +150,6 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let (sut, store) = makeSUT(currentDate: currentDate)
 
         let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.changeTime(byAddingDays: -7))
-//            ([.unique], currentDate.changeTime(byAddingDays: -7, seconds: -1)) // 7 days + 1 second in the past.
 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
@@ -169,6 +168,26 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
         XCTAssertEqual(store.operations, [.retrieval, .deletion])
+    }
+
+    // From memory management wise, if the local feed loader has been removed from memoer
+    // then, we should NOT receive any results when calling the load command.
+    // other wise, that means we have memory leaks.
+    // If the SUT has been removed from memory, and EVEN IF the store completed retrieval successfully
+    // we shouldn't receive results from the closure, as the loader was already deallocated from memory.
+
+    // TLDR: We shouldn't receive results unless the loader exist in memory, if the loader was removed from memory, don't deliver anything please, otherwise, that means in production we will have a memory leaks.
+    
+    func test_load_doesNotDeliverAnyResultsAfterLoadHasBeenDeallocated() {
+        let store = SpyFeedStore()
+        var localFeedLoad: LocalFeedLoader? = LocalFeedLoader(store, currentDate: .init())
+        var receivedResults: [LocalFeedResult] = []
+
+        localFeedLoad?.loadItems { receivedResults.append($0) }
+
+        localFeedLoad = nil
+        store.completeRetrievalWithEmpty()
+        XCTAssertTrue(receivedResults.isEmpty)
     }
 
     func test_deallocation_behavior_onDeleteCacheError() {

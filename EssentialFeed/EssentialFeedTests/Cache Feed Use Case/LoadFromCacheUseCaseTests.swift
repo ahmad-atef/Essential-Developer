@@ -83,7 +83,7 @@ extension LoadFromCacheUseCaseTests {
         return (sut, store)
     }
 
-    private func expect(_ sut: LocalFeedLoader, toCompleteLoadingWith expectedResult: LoadFeedResult, onAction action: () -> Void ) {
+    private func expect(_ sut: LocalFeedLoader, toCompleteLoadingWith expectedResult: LocalFeedResult, onAction action: () -> Void ) {
         let expectation = expectation(description: "waiting for completion")
         sut.loadItems { receivedResult in
             switch (receivedResult, expectedResult) {

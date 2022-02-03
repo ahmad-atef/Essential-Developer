@@ -95,8 +95,9 @@ Then the app should display an error message
 
 extension LocalFeedLoader {
     /// Use this command to load Feed from cache, the cached Feed shouldn't be expired.
-    public func loadItems(completion: @escaping (LoadFeedResult) -> Void) {
-        store.retrieveFeed { [unowned self] result in
+    public func loadItems(completion: @escaping (LocalFeedResult) -> Void) {
+        store.retrieveFeed { [weak self] result in
+            guard let self = self else { return }
             switch result {
             case .failure(let error):
                 self.store.deleteCachedFeed(completion: { _ in })
