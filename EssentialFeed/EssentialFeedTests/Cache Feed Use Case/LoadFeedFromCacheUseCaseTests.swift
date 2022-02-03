@@ -141,6 +141,22 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.retrieval])
     }
 
+    // If the cache is seven days old or more
+    // then, the local feed loader should Delete the cache.
+    // i.e the store dependency should receive a Delete operation.
+    func test_load_shouldDelteCacheIfFoundInvalidCache() {
+        // Given
+        let currentDate = Date()
+        let (sut, store) = makeSUT(currentDate: currentDate)
+        let inValidTimestamp = currentDate.changeTime(byAddingDays: -7)
+        let localFeedItem: LocalFeedItem = .unique
+
+        sut.loadItems(completion: { _ in })
+        store.completeRetrievalSuccessfullyWithItems([localFeedItem], timeStamp: inValidTimestamp)
+
+        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+    }
+
     func test_deallocation_behavior_onDeleteCacheError() {
         let feedStore = SpyFeedStore()
         var localFeedLoader: LocalFeedLoader? = .init(feedStore, currentDate: .init())

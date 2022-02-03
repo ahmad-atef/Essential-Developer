@@ -103,7 +103,10 @@ extension LocalFeedLoader {
                 completion(.failure(error))
             case .found(let items, let timeStamp) where self.cacheIsNotExpired(timeStamp):
                 completion(.success(items))
-            case .empty, .found:
+            case .empty:
+                completion(.success([]))
+            case .found: // Store contains expired items.
+                self.store.deleteCachedFeed(completion: { _ in })
                 completion(.success([]))
             }
         }
