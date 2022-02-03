@@ -95,6 +95,8 @@ Then the app should display an error message
 
 extension LocalFeedLoader {
     /// Use this command to load Feed from cache, the cached Feed shouldn't be expired.
+
+    // Query should NOT have a side effect, `retrieve` or `load` should only Load, i.e no other logic should be included like cache invalidation or anything else, this is whats called CQS: Command Query Separation 👌
     public func loadItems(completion: @escaping (LocalFeedResult) -> Void) {
         store.retrieveFeed { [weak self] result in
             guard let self = self else { return }
