@@ -17,6 +17,14 @@ final class ValidateCacheUseCaseTests: XCTestCase {
         XCTAssertTrue(store.operations.isEmpty)
     }
 
+    func test_validate_shouldDeleteCacheOnRetrievalError() {
+        let (service, store) = makeSUT()
+
+        service.validateCache()
+        store.completeRetrievalWithError(.anyNSError)
+
+        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+    }
     // MAKR:- Helper Factory method 🏭
     private func makeSUT(currentDate: Date  = .init(), _ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
         let store = SpyFeedStore()

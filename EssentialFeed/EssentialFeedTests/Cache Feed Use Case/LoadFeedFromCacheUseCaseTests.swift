@@ -159,7 +159,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     // If the cache is more than seven days old
     // then, the local feed loader should Delete the cache.
     // i.e the store dependency should receive a Delete operation.
-    func test_load_shouldDelteCacheIfFoundMoreThanSevenDaysOldCache() {
+    func test_load_shouldDeleteCacheIfFoundMoreThanSevenDaysOldCache() {
         // Given
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
