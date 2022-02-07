@@ -73,7 +73,13 @@ extension LocalFeedLoader {
 
 extension LocalFeedLoader {
     public func validateCache() {
-        store.retrieveFeed(completion: { _ in })
-        store.deleteCachedFeed(completion: { _ in })
+        store.retrieveFeed { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .failure:
+                self.store.deleteCachedFeed(completion: { _ in })
+            default: break
+            }
+        }
     }
 }
