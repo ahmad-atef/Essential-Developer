@@ -127,7 +127,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 
     // If cache is valid (not expired), then the load command shouldn't Clear cache, but do Insert operation.
-    func test_load_shouldNotClearValidCache() {
+    func test_load_hasNoSideEffectOnValidCache() {
 
         // Given
         let currentDate = Date()

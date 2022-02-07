@@ -34,6 +34,16 @@ final class ValidateCacheUseCaseTests: XCTestCase {
 
         XCTAssertEqual(store.operations, [.retrieval])
     }
+
+    func test_valid_shouldNotDeleteCacheOnValidCache() {
+
+        let (service, store) = makeSUT(currentDate: .nonExpired)
+
+        service.validateCache()
+        store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: .nonExpired)
+
+        XCTAssertEqual(store.operations, [.retrieval])
+    }
     // MAKR:- Helper Factory method 🏭
     private func makeSUT(currentDate: Date  = .init(), _ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
         let store = SpyFeedStore()
@@ -43,4 +53,8 @@ final class ValidateCacheUseCaseTests: XCTestCase {
         trackForMemoryLeaks(sut, file: file, line: line)
         return (sut, store)
     }
+}
+
+private extension Date {
+    static let nonExpired = Date().changeTime(byAddingDays: -7, seconds: -1)
 }
