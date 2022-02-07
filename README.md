@@ -73,4 +73,19 @@ Given the customer doesn't have connectivity
 #### Empty cache course (sad path): 
 1. System delivers no feed images.
 
+
+
+### Cache validation Use Case
+
+#### Primary course:
+1. Execute `validation` command.
+2. System retrieves data from cache.
+3. System validate retrieved cache should be non-expired (less than 7 days old).
+
+#### Reterival Error:
+1. System should delete cache on retrieval error.
+
+#### Expired Cache feed path:
+1. System should delete cache when finding expired cache image feed (7 or more days old)
+
 ---
