@@ -18,7 +18,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [])
     }
 
-    // when invoking `save` command, I should request from feed-store to delete
+    // when invoking `save` command, I MUST `delete` the previous image first.
     // save request delete
     func test_save_requestsCacheDeletion() {
         let (sut, store) = makeSUT()
@@ -101,7 +101,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
     }
 
-    func test_load_deleteCacheOnRetrievalError() {
+    func test_load_hasNoSideEffectsOnRetrievalError() {
 
         // Given
         let (sut, store) = makeSUT()
@@ -111,7 +111,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         store.completeRetrievalWithError(.anyNSError)
 
         // Then
-        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+        XCTAssertEqual(store.operations, [.retrieval])
     }
 
     func test_load_shouldNotClearCacheIfCacheWasEmpty() {
