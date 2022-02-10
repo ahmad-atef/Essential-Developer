@@ -144,7 +144,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     // If the cache is seven days old
     // then, the local feed loader should Delete the cache.
     // i.e the store dependency should receive a Delete operation.
-    func test_load_shouldDelteCacheIfFoundInvalidCache() {
+    func test_load_hasNoSideEffectOnExpiredCache() {
         // Given
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
@@ -153,13 +153,13 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
-        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+        XCTAssertEqual(store.operations, [.retrieval])
     }
 
     // If the cache is more than seven days old
     // then, the local feed loader should Delete the cache.
     // i.e the store dependency should receive a Delete operation.
-    func test_load_shouldDeleteCacheIfFoundMoreThanSevenDaysOldCache() {
+    func test_load_hasNoSideEffectOnMoreThanSevenDaysOldCache() {
         // Given
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
@@ -167,7 +167,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.changeTime(byAddingDays: -7, seconds: -1)) // 7 days + 1 second in the past.
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
-        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+        XCTAssertEqual(store.operations, [.retrieval])
     }
 
     // From memory management wise, if the local feed loader has been removed from memoer

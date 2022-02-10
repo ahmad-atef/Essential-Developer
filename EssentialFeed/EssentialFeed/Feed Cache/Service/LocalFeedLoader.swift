@@ -54,18 +54,17 @@ extension LocalFeedLoader {
             switch result {
             case .failure(let error):
                 completion(.failure(error))
-            case .found(let items, let timeStamp) where self.cacheIsNotExpired(timeStamp):
+            case .found(let items, let timeStamp) where self.validate(timeStamp):
                 completion(.success(items))
             case .empty:
                 completion(.success([]))
             case .found: // Store contains expired items.
-                self.store.deleteCachedFeed(completion: { _ in })
                 completion(.success([]))
             }
         }
     }
     
-    private func cacheIsNotExpired(_ timeStamp: Date) -> Bool {
+    private func validate(_ timeStamp: Date) -> Bool {
         guard let daysDiff = calendar.dateComponents([.day], from: timeStamp, to: currentDate).day else { return false }
         return daysDiff < 7
     }
@@ -78,7 +77,10 @@ extension LocalFeedLoader {
             switch result {
             case .failure:
                 self.store.deleteCachedFeed(completion: { _ in })
-            default: break
+            case .found(_ , let timeStamp) where !self.validate(timeStamp):
+                self.store.deleteCachedFeed(completion: { _ in })
+            case .empty, .found:
+                break;
             }
         }
     }

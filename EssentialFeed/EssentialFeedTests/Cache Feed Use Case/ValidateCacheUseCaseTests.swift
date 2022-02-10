@@ -37,13 +37,27 @@ final class ValidateCacheUseCaseTests: XCTestCase {
 
     func test_valid_shouldNotDeleteCacheOnValidCache() {
 
-        let (service, store) = makeSUT(currentDate: .nonExpired)
+        let currentDate = Date()
+        let (service, store) = makeSUT(currentDate: currentDate)
 
         service.validateCache()
-        store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: .nonExpired)
+        store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: currentDate.changeTime(byAddingDays: -7, seconds: 1))
 
         XCTAssertEqual(store.operations, [.retrieval])
     }
+
+    func test_valid_shouldDeleteCacheOnExpiredCache() {
+
+        let currentDate = Date()
+        let (service, store) = makeSUT(currentDate: currentDate)
+
+        let expiredDate = currentDate.changeTime(byAddingDays: -7, seconds: -7)
+        service.validateCache()
+        store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: expiredDate)
+
+        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+    }
+
     // MAKR:- Helper Factory method 🏭
     private func makeSUT(currentDate: Date  = .init(), _ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
         let store = SpyFeedStore()
@@ -57,4 +71,5 @@ final class ValidateCacheUseCaseTests: XCTestCase {
 
 private extension Date {
     static let nonExpired = Date().changeTime(byAddingDays: -7, seconds: -1)
+    static let expired = Date().changeTime(byAddingDays: -7)
 }
