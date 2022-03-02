@@ -54,7 +54,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let (sut, store) = makeSUT(currentDate: timestamp)
 
         let items = uniqueItems()
-        sut.save(items: items.model) { _ in } // So we save [FeedItem]
+        sut.save(items: items.model) { _ in }
         store.completeDeletionSuccessfully()
 
         // but we expect feedStore to insert [LocalFeedItem]
