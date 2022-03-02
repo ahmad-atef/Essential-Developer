@@ -1,18 +1,25 @@
+import Foundation
+private final class FeedCachePolicy {
+
+    private let calendar = Calendar(identifier: .gregorian)
+
+
+    private var maxCacheAgeInDays: Int { 7 }
+
+    func validate(_ timeStamp: Date, against date: Date) -> Bool {
+        guard let daysDiff = calendar.dateComponents([.day], from: timeStamp, to: date).day else { return false }
+        return daysDiff < maxCacheAgeInDays
+    }
+}
+
 public class LocalFeedLoader: CacheFeedLoader {
     private let store: FeedStore
+    private let cachePolicy = FeedCachePolicy()
     private let currentDate: Date // start point to compare 🧑‍⚖️
-    private let calendar = Calendar(identifier: .gregorian)
 
     public init(_ feedStore: FeedStore, currentDate: Date) {
         self.store = feedStore
         self.currentDate = currentDate
-    }
-
-    private var maxCacheAgeInDays: Int { 7 }
-
-    private func validate(_ timeStamp: Date) -> Bool {
-        guard let daysDiff = calendar.dateComponents([.day], from: timeStamp, to: currentDate).day else { return false }
-        return daysDiff < maxCacheAgeInDays
     }
 }
 
@@ -45,7 +52,7 @@ extension LocalFeedLoader {
             switch result {
             case .failure(let error):
                 completion(.failure(error))
-            case .found(let items, let timeStamp) where self.validate(timeStamp):
+            case .found(let items, let timeStamp) where self.cachePolicy.validate(timeStamp, against: self.currentDate):
                 completion(.success(items))
             case .empty, .found: // Store contains expired items.
                 completion(.success([]))
@@ -62,7 +69,7 @@ extension LocalFeedLoader {
             switch result {
             case .failure:
                 self.store.deleteCachedFeed(completion: { _ in })
-            case .found(_ , let timeStamp) where !self.validate(timeStamp):
+            case .found(_ , let timeStamp) where !self.cachePolicy.validate(timeStamp, against: self.currentDate):
                 self.store.deleteCachedFeed(completion: { _ in })
             case .empty, .found:
                 break;
