@@ -8,11 +8,19 @@
 import Foundation
 
 extension Date {
-    public func changeTime(byAddingDays days: Int, seconds: Int = 0) -> Date {
+
+    private func changeTime(byAddingDays days: Int) -> Date {
         var dateComponent = DateComponents()
         dateComponent.day = days
-        dateComponent.second = seconds
-
         return Calendar(identifier: .gregorian).date(byAdding: dateComponent, to: self)!
+    }
+
+    /// DSL for MaxAge for feed cache.
+    public func minusFeedCacheMaxAge() -> Date {
+        changeTime(byAddingDays: -7)
+    }
+
+    public func adding(seconds: TimeInterval) -> Date {
+        return self + seconds
     }
 }

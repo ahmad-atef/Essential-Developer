@@ -41,9 +41,21 @@ final class ValidateCacheUseCaseTests: XCTestCase {
         let (service, store) = makeSUT(currentDate: currentDate)
 
         service.validateCache()
-        store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: currentDate.changeTime(byAddingDays: -7, seconds: 1))
+        store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: currentDate.minusFeedCacheMaxAge().adding(seconds: 1))
 
         XCTAssertEqual(store.operations, [.retrieval])
+    }
+
+    func test_valid_shouldDeleteCacheOnJustExpiredCache() {
+
+        let currentDate = Date()
+        let (service, store) = makeSUT(currentDate: currentDate)
+
+        let expiredDate = currentDate.minusFeedCacheMaxAge()
+        service.validateCache()
+        store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: expiredDate)
+
+        XCTAssertEqual(store.operations, [.retrieval, .deletion])
     }
 
     func test_valid_shouldDeleteCacheOnExpiredCache() {
@@ -51,19 +63,7 @@ final class ValidateCacheUseCaseTests: XCTestCase {
         let currentDate = Date()
         let (service, store) = makeSUT(currentDate: currentDate)
 
-        let expiredDate = currentDate.changeTime(byAddingDays: -7)
-        service.validateCache()
-        store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: expiredDate)
-
-        XCTAssertEqual(store.operations, [.retrieval, .deletion])
-    }
-
-    func test_valid_shouldDeleteCacheOnMoreSevenDaysOldCache() {
-
-        let currentDate = Date()
-        let (service, store) = makeSUT(currentDate: currentDate)
-
-        let expiredDate = currentDate.changeTime(byAddingDays: -7, seconds: -1)
+        let expiredDate = currentDate.minusFeedCacheMaxAge().adding(seconds: -1)
         service.validateCache()
         store.completeRetrievalSuccessfullyWithItems([.unique], timeStamp: expiredDate)
 
@@ -92,9 +92,4 @@ final class ValidateCacheUseCaseTests: XCTestCase {
         trackForMemoryLeaks(sut, file: file, line: line)
         return (sut, store)
     }
-}
-
-private extension Date {
-    static let nonExpired = Date().changeTime(byAddingDays: -7, seconds: -1)
-    static let expired = Date().changeTime(byAddingDays: -7)
 }

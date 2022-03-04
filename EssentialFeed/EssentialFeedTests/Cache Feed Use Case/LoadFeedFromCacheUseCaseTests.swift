@@ -28,16 +28,16 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.deletion])
     }
 
-    // when saving and the `delete` command fails,
-    // I shouldn't insert anything
-    // + I should receive deletion failure error
-    // on delete fail I should receive delete error
-    // test_save_failsOnDeletionError
+    // When Save, and the Store fails
+    // I should receive failure error 
     func test_save_doesNotRequestCacheInsertionOnDeletionError() {
+
+        // Given
         let (sut, store) = makeSUT()
         var expectedError: NSError = .anyNSError
         let exp = expectation(description: "")
 
+        // When
         sut.save(items: []) { error in
             expectedError = error! as NSError
             exp.fulfill()
@@ -45,6 +45,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         store.completeDeletionWithError(.anyNSError)
         wait(for: [exp], timeout: 1.0)
 
+        // Then
         XCTAssertEqual(store.operations, [.deletion])
         XCTAssertEqual(expectedError, .anyNSError)
     }
@@ -132,7 +133,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         // Given
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
-        let validTimestamp = currentDate.changeTime(byAddingDays: -7, seconds: 1) // one second after seven days old.
+        let validTimestamp = currentDate.minusFeedCacheMaxAge().adding(seconds: 1)
         let localFeedItem: LocalFeedItem = .unique
 
         sut.loadItems(completion: { _ in })
@@ -141,7 +142,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.retrieval])
     }
 
-    // If the cache is seven days old
+    // If the cache is expired
     // then, the local feed loader should Delete the cache.
     // i.e the store dependency should receive a Delete operation.
     func test_load_hasNoSideEffectOnExpiredCache() {
@@ -149,22 +150,22 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
 
-        let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.changeTime(byAddingDays: -7))
+        let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge())
 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
         XCTAssertEqual(store.operations, [.retrieval])
     }
 
-    // If the cache is more than seven days old
+    // If the cache is expired
     // then, the local feed loader should Delete the cache.
     // i.e the store dependency should receive a Delete operation.
-    func test_load_hasNoSideEffectOnMoreThanSevenDaysOldCache() {
+    func test_load_hasNoSideEffectOnOldExpiredCache() {
         // Given
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
 
-        let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.changeTime(byAddingDays: -7, seconds: -1)) // 7 days + 1 second in the past.
+        let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge().adding(seconds: -1)) // 7 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
         XCTAssertEqual(store.operations, [.retrieval])

@@ -44,27 +44,27 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
         }
     }
 
-    func testLoadCommandDeliversCachedImagesSuccessfulyOnLessThanSevenDaysOldCache() {
+    func testLoadCommandDeliversCachedImagesSuccessfullyOnValidCache() {
         let (service, store) = makeSUT()
         let items = uniqueItems().local
-        let lessThanSevenDaysTimeStamp = Date().changeTime(byAddingDays: -7, seconds: 1)
+        let validTimeStamp = Date().minusFeedCacheMaxAge().adding(seconds: 1)
 
         expect(service, toCompleteLoadingWith: .success(items)) {
-            store.completeRetrievalSuccessfullyWithItems(items, timeStamp: lessThanSevenDaysTimeStamp)
+            store.completeRetrievalSuccessfullyWithItems(items, timeStamp: validTimeStamp)
         }
     }
 
-    func testLoadCommandDeliversNoImagesOnExactSevenDaysOldCache() {
+    func testLoadCommandDeliversNoImagesOnJustExpiredCache() {
         let items = uniqueItems().local
-        let exactSevenDaysTimeStamp = Date().changeTime(byAddingDays: -7, seconds: 0)
+        let expiredTimeStamp = Date().minusFeedCacheMaxAge()
         let (service, store) = makeSUT()
 
         expect(service, toCompleteLoadingWith: .success([])) {
-            store.completeRetrievalSuccessfullyWithItems(items, timeStamp: exactSevenDaysTimeStamp)
+            store.completeRetrievalSuccessfullyWithItems(items, timeStamp: expiredTimeStamp)
         }
     }
 
-    func testLoadCommandDeliversNoImagesOnMoreThanSevenDaysOldCache() {
+    func testLoadCommandDeliversNoImagesOnExpiredCache() {
         let (service, store) = makeSUT()
         let items = uniqueItems().local
 
