@@ -62,9 +62,9 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.deletion, .insertion(items.local, timestamp)])
     }
 
-    private func uniqueItems() -> (model: [FeedItem], local: [LocalFeedItem]) {
-        let items: [FeedItem] = [.unique, .unique]
-        let localFeedItems: [LocalFeedItem] = items.map { LocalFeedItem($0) }
+    private func uniqueItems() -> (model: [FeedImage], local: [LocalFeedImage]) {
+        let items: [FeedImage] = [.unique, .unique]
+        let localFeedItems: [LocalFeedImage] = items.map { LocalFeedImage($0) }
         return(items, localFeedItems)
     }
 
@@ -134,7 +134,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
         let validTimestamp = currentDate.minusFeedCacheMaxAge().adding(seconds: 1)
-        let localFeedItem: LocalFeedItem = .unique
+        let localFeedItem: LocalFeedImage = .unique
 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems([localFeedItem], timeStamp: validTimestamp)
@@ -150,7 +150,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
 
-        let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge())
+        let invalidInsertion: (items: [LocalFeedImage], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge())
 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
@@ -165,7 +165,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
 
-        let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge().adding(seconds: -1)) // 7 
+        let invalidInsertion: (items: [LocalFeedImage], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge().adding(seconds: -1)) // 7 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
         XCTAssertEqual(store.operations, [.retrieval])

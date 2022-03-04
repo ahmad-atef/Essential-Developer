@@ -8,6 +8,6 @@
 import Foundation
 import EssentialFeed
 
-public extension LocalFeedItem {
-    static let unique: LocalFeedItem = .init(.unique)
+public extension LocalFeedImage {
+    static let unique: LocalFeedImage = .init(.unique)
 }

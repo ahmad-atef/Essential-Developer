@@ -1,14 +1,13 @@
-//
-//  FeedImage.swift
-//  EssentialFeed
-//
-//  Created by Ahmed Atef Ali Ahmed on 01.07.21.
-//
+public struct FeedImage: Equatable {
+    public let id: UUID
+    public let description: String?
+    public let location: String?
+    public let imageURL: URL
 
-import Foundation
-
-public typealias FeedImageResult = Result<[ImageItem], Error>
-
-protocol FeedImage {
-    func loadImages(completion: @escaping (FeedImageResult) -> Void)
+    public init(id: UUID, description: String?, location: String?, imageURL: URL) {
+        self.id = id
+        self.imageURL = imageURL
+        self.description = description
+        self.location = location
+    }
 }

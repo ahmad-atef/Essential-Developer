@@ -8,8 +8,8 @@
 import Foundation
 import EssentialFeed
 
-public extension FeedItem {
-    static let unique = FeedItem(
+public extension FeedImage {
+    static let unique = FeedImage(
         id: UUID(),
         description: nil,
         location: nil,

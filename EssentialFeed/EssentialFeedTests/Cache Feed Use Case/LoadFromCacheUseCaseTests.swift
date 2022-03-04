@@ -101,9 +101,9 @@ extension LoadFromCacheUseCaseTests {
         wait(for: [expectation], timeout: 1.0)
     }
 
-    private func uniqueItems() -> (model: [FeedItem], local: [LocalFeedItem]) {
-        let items: [FeedItem] = [.unique, .unique]
-        let localFeedItems: [LocalFeedItem] = items.map { LocalFeedItem($0) }
+    private func uniqueItems() -> (model: [FeedImage], local: [LocalFeedImage]) {
+        let items: [FeedImage] = [.unique, .unique]
+        let localFeedItems: [LocalFeedImage] = items.map { LocalFeedImage($0) }
         return(items, localFeedItems)
     }
 }

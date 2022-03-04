@@ -12,18 +12,18 @@ public class LocalFeedLoader: CacheFeedLoader {
 
 // MARK: Saving
 extension LocalFeedLoader {
-    public func save(items: [FeedItem], completion: @escaping (CacheFeedResult) -> Void) {
+    public func save(items: [FeedImage], completion: @escaping (CacheFeedResult) -> Void) {
         store.deleteCachedFeed { [weak self] error in
             guard let self = self else { return }
             if let cacheDeletionError = error {
                 completion(cacheDeletionError)
             } else {
-                self.cache(items.map(LocalFeedItem.init), with: completion)
+                self.cache(items.map(LocalFeedImage.init), with: completion)
             }
         }
     }
 
-    private func cache(_ items: [LocalFeedItem], with completion: @escaping (CacheFeedResult) -> Void) {
+    private func cache(_ items: [LocalFeedImage], with completion: @escaping (CacheFeedResult) -> Void) {
         store.insertFeed(items, timeStamp: currentDate) { [weak self] error in
             guard self != nil else { return }
             completion(error)

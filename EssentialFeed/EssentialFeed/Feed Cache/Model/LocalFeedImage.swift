@@ -1,5 +1,5 @@
 // Mirror for the `FeedItem` but for Local representation.
-public struct LocalFeedItem: Equatable {
+public struct LocalFeedImage: Equatable {
     public let id: UUID
     public let description: String?
     public let location: String?
