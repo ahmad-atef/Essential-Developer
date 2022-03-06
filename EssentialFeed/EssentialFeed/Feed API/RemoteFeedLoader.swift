@@ -48,12 +48,12 @@ public final class RemoteFeedLoader: FeedLoader {
 }
 
 private extension Array where Element == RemoteFeedItem {
-    func toItems() -> [FeedItem] {
-        return map (FeedItem.init)
+    func toItems() -> [FeedImage] {
+        return map (FeedImage.init)
     }
 }
 
-private extension FeedItem {
+private extension FeedImage {
     init(_ remoteFeedItem: RemoteFeedItem) {
         self.init(
             id: remoteFeedItem.id,

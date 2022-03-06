@@ -1,54 +1,29 @@
-/*
---------------------------------------------------------------
- Narrative:
---------------------------------------------------------------
-As an online customer
-I want the app to automatically load my latest image feed
-So I can always enjoy the newest images of my friends
---------------------------------------------------------------
- Scenarios (Acceptance criteria)
---------------------------------------------------------------
-Given the customer has connectivity
-When the customer requests to see their feed
-Then the app should display the latest feed from remote
-And replace the cache with the new feed
-
-*/
+import Foundation
 
 public class LocalFeedLoader: CacheFeedLoader {
     private let store: FeedStore
     private let currentDate: Date // start point to compare 🧑‍⚖️
-    private let calendar = Calendar(identifier: .gregorian)
 
     public init(_ feedStore: FeedStore, currentDate: Date) {
         self.store = feedStore
         self.currentDate = currentDate
     }
+}
 
-    /// Simply what this API does is, given you want to save some items / response
-    /// it will try first to remove the cached response, if that succeeded...
-    ///  it will try to save the new items / response, if that succeeded
-    /// then operation done successfully
-
-    /// Save = ☑️ Delete + ☑️ Insert
-    /// Save = Delete (❌,☑️) -> Insert (❌,☑️)
-
-    // LocalFeedLoader Must work with FeedItem model, as it receives FeedItem from the other components e.g RemoteFeedLoader, so we should keep the API or the contract clean as it is.
-    // But when we save and communicate with FeedStore (the guy who will remove the old cache and insert the new FeedItem, we should add our own DTO thats related to caching module which is `LocalFeedItem`
-
-    public func save(items: [FeedItem], completion: @escaping (CacheFeedResult) -> Void) {
+// MARK: Saving
+extension LocalFeedLoader {
+    public func save(items: [FeedImage], completion: @escaping (CacheFeedResult) -> Void) {
         store.deleteCachedFeed { [weak self] error in
             guard let self = self else { return }
             if let cacheDeletionError = error {
                 completion(cacheDeletionError)
             } else {
-                self.insert(items.toLocal(), with: completion)
+                self.cache(items.map(LocalFeedImage.init), with: completion)
             }
         }
     }
 
-    //MARK:- Helper method
-    private func insert(_ items: [LocalFeedItem], with completion: @escaping (CacheFeedResult) -> Void) {
+    private func cache(_ items: [LocalFeedImage], with completion: @escaping (CacheFeedResult) -> Void) {
         store.insertFeed(items, timeStamp: currentDate) { [weak self] error in
             guard self != nil else { return }
             completion(error)
@@ -56,67 +31,36 @@ public class LocalFeedLoader: CacheFeedLoader {
     }
 }
 
-private extension Array where Element == FeedItem {
-    func toLocal() -> [LocalFeedItem] { map { LocalFeedItem($0) } }
-}
-
-
-
-/*
---------------------------------------------------------------
-Narrative:
---------------------------------------------------------------
-As an offline customer
-I want the app to show the latest saved version of my image feed
-So I can always enjoy images of my friends
-
---------------------------------------------------------------
-Scenarios (Acceptance criteria)
---------------------------------------------------------------
-Given the customer doesn't have connectivity
-And there’s a cached version of the feed
-And the cache is less than seven days old
-When the customer requests to see the feed
-Then the app should display the latest feed saved
-
-Given the customer doesn't have connectivity
-And there’s a cached version of the feed
-And the cache is seven days old or more
-When the customer requests to see the feed
-Then the app should display an error message
-
-Given the customer doesn't have connectivity
-And the cache is empty
-When the customer requests to see the feed
-Then the app should display an error message
-
-*/
-
-
+// MARK: Loading
 extension LocalFeedLoader {
-    /// Use this command to load Feed from cache, the cached Feed shouldn't be expired.
-
-    // Query should NOT have a side effect, `retrieve` or `load` should only Load, i.e no other logic should be included like cache invalidation or anything else, this is whats called CQS: Command Query Separation 👌
     public func loadItems(completion: @escaping (LocalFeedResult) -> Void) {
         store.retrieveFeed { [weak self] result in
             guard let self = self else { return }
             switch result {
             case .failure(let error):
-                self.store.deleteCachedFeed(completion: { _ in })
                 completion(.failure(error))
-            case .found(let items, let timeStamp) where self.cacheIsNotExpired(timeStamp):
+            case .found(let items, let timeStamp) where FeedCachePolicy.validate(timeStamp, against: self.currentDate):
                 completion(.success(items))
-            case .empty:
-                completion(.success([]))
-            case .found: // Store contains expired items.
-                self.store.deleteCachedFeed(completion: { _ in })
+            case .empty, .found: // Store contains expired items.
                 completion(.success([]))
             }
         }
     }
-    
-    private func cacheIsNotExpired(_ timeStamp: Date) -> Bool {
-        guard let daysDiff = calendar.dateComponents([.day], from: timeStamp, to: currentDate).day else { return false }
-        return daysDiff < 7
+}
+
+// MARK: Validation
+extension LocalFeedLoader {
+    public func validateCache() {
+        store.retrieveFeed { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .failure:
+                self.store.deleteCachedFeed(completion: { _ in })
+            case .found(_ , let timeStamp) where !FeedCachePolicy .validate(timeStamp, against: self.currentDate):
+                self.store.deleteCachedFeed(completion: { _ in })
+            case .empty, .found:
+                break;
+            }
+        }
     }
 }

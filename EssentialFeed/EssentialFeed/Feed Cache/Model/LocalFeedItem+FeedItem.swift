@@ -1,5 +1,5 @@
-public extension LocalFeedItem {
-    init(_ feedItem: FeedItem) {
+public extension LocalFeedImage {
+    init(_ feedItem: FeedImage) {
         self.init(
             id: feedItem.id,
             description: feedItem.description,

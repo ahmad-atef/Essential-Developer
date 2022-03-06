@@ -12,7 +12,7 @@ final class SpyFeedStore: FeedStore {
 
     enum Operation: Equatable {
         case deletion
-        case insertion([LocalFeedItem], Date)
+        case insertion([LocalFeedImage], Date)
         case retrieval
     }
 
@@ -43,7 +43,7 @@ final class SpyFeedStore: FeedStore {
 
 
     // Insert Operations
-    func insertFeed(_ items: [LocalFeedItem], timeStamp: Date, completion: @escaping (Error?) -> Void) {
+    func insertFeed(_ items: [LocalFeedImage], timeStamp: Date, completion: @escaping (Error?) -> Void) {
         operations.append(.insertion(items, timeStamp))
         insertions.append(completion)
     }
@@ -70,7 +70,7 @@ final class SpyFeedStore: FeedStore {
         retrievals[index](.empty)
     }
 
-    func completeRetrievalSuccessfullyWithItems(_ items: [LocalFeedItem], timeStamp: Date = Date(), at index: Int = 0) {
+    func completeRetrievalSuccessfullyWithItems(_ items: [LocalFeedImage], timeStamp: Date = Date(), at index: Int = 0) {
         retrievals[index](.found(items, timeStamp))
     }
 }

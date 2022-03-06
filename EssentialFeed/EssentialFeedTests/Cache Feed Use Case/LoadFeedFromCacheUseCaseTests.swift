@@ -18,7 +18,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [])
     }
 
-    // when invoking `save` command, I should request from feed-store to delete
+    // when invoking `save` command, I MUST `delete` the previous image first.
     // save request delete
     func test_save_requestsCacheDeletion() {
         let (sut, store) = makeSUT()
@@ -28,16 +28,16 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.deletion])
     }
 
-    // when saving and the `delete` command fails,
-    // I shouldn't insert anything
-    // + I should receive deletion failure error
-    // on delete fail I should receive delete error
-    // test_save_failsOnDeletionError
+    // When Save, and the Store fails
+    // I should receive failure error 
     func test_save_doesNotRequestCacheInsertionOnDeletionError() {
+
+        // Given
         let (sut, store) = makeSUT()
         var expectedError: NSError = .anyNSError
         let exp = expectation(description: "")
 
+        // When
         sut.save(items: []) { error in
             expectedError = error! as NSError
             exp.fulfill()
@@ -45,6 +45,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         store.completeDeletionWithError(.anyNSError)
         wait(for: [exp], timeout: 1.0)
 
+        // Then
         XCTAssertEqual(store.operations, [.deletion])
         XCTAssertEqual(expectedError, .anyNSError)
     }
@@ -54,16 +55,16 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let (sut, store) = makeSUT(currentDate: timestamp)
 
         let items = uniqueItems()
-        sut.save(items: items.model) { _ in } // So we save [FeedItem]
+        sut.save(items: items.model) { _ in }
         store.completeDeletionSuccessfully()
 
         // but we expect feedStore to insert [LocalFeedItem]
         XCTAssertEqual(store.operations, [.deletion, .insertion(items.local, timestamp)])
     }
 
-    private func uniqueItems() -> (model: [FeedItem], local: [LocalFeedItem]) {
-        let items: [FeedItem] = [.unique, .unique]
-        let localFeedItems: [LocalFeedItem] = items.map { LocalFeedItem($0) }
+    private func uniqueItems() -> (model: [FeedImage], local: [LocalFeedImage]) {
+        let items: [FeedImage] = [.unique, .unique]
+        let localFeedItems: [LocalFeedImage] = items.map { LocalFeedImage($0) }
         return(items, localFeedItems)
     }
 
@@ -101,7 +102,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
     }
 
-    func test_load_deleteCacheOnRetrievalError() {
+    func test_load_hasNoSideEffectsOnRetrievalError() {
 
         // Given
         let (sut, store) = makeSUT()
@@ -111,10 +112,10 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         store.completeRetrievalWithError(.anyNSError)
 
         // Then
-        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+        XCTAssertEqual(store.operations, [.retrieval])
     }
 
-    func test_load_shouldNotClearCacheIfCacheWasEmpty() {
+    func test_load_hasNoSideEffectOnEmptyCache() {
         // Given
         let (sut, store) = makeSUT()
 
@@ -127,13 +128,13 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 
     // If cache is valid (not expired), then the load command shouldn't Clear cache, but do Insert operation.
-    func test_load_shouldNotClearValidCache() {
+    func test_load_hasNoSideEffectOnValidCache() {
 
         // Given
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
-        let validTimestamp = currentDate.changeTime(byAddingDays: -7, seconds: 1) // one second after seven days old.
-        let localFeedItem: LocalFeedItem = .unique
+        let validTimestamp = currentDate.minusFeedCacheMaxAge().adding(seconds: 1)
+        let localFeedItem: LocalFeedImage = .unique
 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems([localFeedItem], timeStamp: validTimestamp)
@@ -141,33 +142,33 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.retrieval])
     }
 
-    // If the cache is seven days old
+    // If the cache is expired
     // then, the local feed loader should Delete the cache.
     // i.e the store dependency should receive a Delete operation.
-    func test_load_shouldDelteCacheIfFoundInvalidCache() {
+    func test_load_hasNoSideEffectOnExpiredCache() {
         // Given
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
 
-        let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.changeTime(byAddingDays: -7))
+        let invalidInsertion: (items: [LocalFeedImage], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge())
 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
-        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+        XCTAssertEqual(store.operations, [.retrieval])
     }
 
-    // If the cache is more than seven days old
+    // If the cache is expired
     // then, the local feed loader should Delete the cache.
     // i.e the store dependency should receive a Delete operation.
-    func test_load_shouldDelteCacheIfFoundMoreThanSevenDaysOldCache() {
+    func test_load_hasNoSideEffectOnOldExpiredCache() {
         // Given
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
 
-        let invalidInsertion: (items: [LocalFeedItem], timeStamp: Date) = ([.unique], currentDate.changeTime(byAddingDays: -7, seconds: -1)) // 7 days + 1 second in the past.
+        let invalidInsertion: (items: [LocalFeedImage], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge().adding(seconds: -1)) // 7 
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
-        XCTAssertEqual(store.operations, [.retrieval, .deletion])
+        XCTAssertEqual(store.operations, [.retrieval])
     }
 
     // From memory management wise, if the local feed loader has been removed from memoer
