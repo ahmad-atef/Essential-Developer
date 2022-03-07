@@ -1,9 +1,4 @@
-//
-//  RemoteFeedLoader.swift
-//  EssentialFeed
-//
-//  Created by Ahmed Atef Ali Ahmed on 14.05.21.
-//
+import Foundation
 
 public final class RemoteFeedLoader: FeedLoader {
 

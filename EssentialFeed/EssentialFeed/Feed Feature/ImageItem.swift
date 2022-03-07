@@ -1,3 +1,5 @@
+import Foundation
+
 public struct ImageItem {
     let imageID: UUID
     let imageDescription: String?

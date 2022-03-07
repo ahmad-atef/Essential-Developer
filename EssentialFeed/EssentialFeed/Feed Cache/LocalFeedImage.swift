@@ -1,3 +1,4 @@
+import Foundation
 // Mirror for the `FeedItem` but for Local representation.
 public struct LocalFeedImage: Equatable {
     public let id: UUID
