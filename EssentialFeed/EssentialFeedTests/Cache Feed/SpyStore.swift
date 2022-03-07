@@ -57,7 +57,7 @@ final class SpyFeedStore: FeedStore {
     }
 
     // Retrieve Operations
-    func retrieveFeed(completion: @escaping (RetrieveFeedResult) -> Void) {
+    func retrieve(completion: @escaping (RetrieveFeedResult) -> Void) {
         operations.append(.retrieval)
         retrievals.append(completion)
     }
