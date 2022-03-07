@@ -1,3 +1,5 @@
+import Foundation
+
 public enum RetrieveFeedResult {
     case empty
     case failure(Error)

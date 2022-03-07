@@ -1,3 +1,5 @@
+import Foundation
+
 /// Transitional representation of FeedItem that specific of the API module.
 /// DTO for Remote Feed representation.
 struct RemoteFeedItem: Decodable {

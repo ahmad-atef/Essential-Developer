@@ -1,3 +1,5 @@
+import Foundation
+
 internal final class FeedCachePolicy {
     private init() { }
 
