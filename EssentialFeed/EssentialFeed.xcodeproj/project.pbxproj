@@ -185,7 +185,7 @@
 				1EC1CAE9263A95190074239B /* Info.plist */,
 				1EC6F684267B349C00BD5175 /* Helper */,
 				1E42A7E7266C2784008D57F1 /* Feed API */,
-				1ED9295F26A169F5003A63EC /* Cache Feed Use Case */,
+				1ED9295F26A169F5003A63EC /* Cache Feed */,
 			);
 			path = EssentialFeedTests;
 			sourceTree = "<group>";
@@ -219,7 +219,7 @@
 			path = Helpers;
 			sourceTree = "<group>";
 		};
-		1ED9295F26A169F5003A63EC /* Cache Feed Use Case */ = {
+		1ED9295F26A169F5003A63EC /* Cache Feed */ = {
 			isa = PBXGroup;
 			children = (
 				1ED432EE26EA996A00DE0A9E /* Helpers */,
@@ -228,7 +228,7 @@
 				1E4316C327B1627000847F64 /* ValidateCacheUseCaseTests.swift */,
 				1ED432EC26EA42E500DE0A9E /* SpyStore.swift */,
 			);
-			path = "Cache Feed Use Case";
+			path = "Cache Feed";
 			sourceTree = "<group>";
 		};
 		1ED9DA92264E739000169C39 /* Feed API */ = {
