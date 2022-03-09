@@ -2,6 +2,7 @@ import XCTest
 import EssentialFeed
 
 class CodableFeedStoreTests: XCTestCase {
+final class CodableFeedStoreTests: XCTestCase {
 
     class CodableFeedStore {
         func retrieve(completion: @escaping (RetrieveFeedResult) -> Void) {
@@ -24,5 +25,23 @@ class CodableFeedStoreTests: XCTestCase {
             exp.fulfill()
         }
         wait(for: [exp], timeout: 1.0)
+    }
+
+    func test_retrieve_hasNoSideEffectOnEmptyCache() {
+        let sut = CodableFeedStore()
+        sut.retrieve { firstResult in
+            sut.retrieve { secondResult in
+                switch (firstResult, secondResult) {
+                case (.empty, .empty):
+                    break
+                default:
+                    XCTFail("""
+                            Expected retrieving twice from empty cache to deliver empty results,
+                            found \(firstResult) and \(secondResult) instead
+                            """)
+                }
+            }
+        }
+
     }
 }
