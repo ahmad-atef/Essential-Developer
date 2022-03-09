@@ -43,7 +43,7 @@ final class SpyFeedStore: FeedStore {
 
 
     // Insert Operations
-    func insertFeed(_ items: [LocalFeedImage], timeStamp: Date, completion: @escaping (Error?) -> Void) {
+    func insert(_ items: [LocalFeedImage], timeStamp: Date, completion: @escaping (Error?) -> Void) {
         operations.append(.insertion(items, timeStamp))
         insertions.append(completion)
     }

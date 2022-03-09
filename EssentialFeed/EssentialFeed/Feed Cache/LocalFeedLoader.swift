@@ -24,7 +24,7 @@ extension LocalFeedLoader {
     }
 
     private func cache(_ items: [LocalFeedImage], with completion: @escaping (CacheFeedResult) -> Void) {
-        store.insertFeed(items, timeStamp: currentDate) { [weak self] error in
+        store.insert(items, timeStamp: currentDate) { [weak self] error in
             guard self != nil else { return }
             completion(error)
         }
