@@ -4,10 +4,31 @@ import EssentialFeed
 final class CodableFeedStoreTests: XCTestCase {
 
     class CodableFeedStore {
+        private struct CodableLocalFeedImage: Codable {
+            public let id: UUID
+            public let description: String?
+            public let location: String?
+            public let imageURL: URL
+
+            init(_ localFeedImage: LocalFeedImage) {
+                self.id = localFeedImage.id
+                self.description = localFeedImage.description
+                self.location = localFeedImage.location
+                self.imageURL = localFeedImage.imageURL
+            }
+
+            var localFeedImage: LocalFeedImage {
+                .init(id: id, description: description, location: location, imageURL: imageURL)
+            }
+        }
 
         private struct Cache: Codable {
-            let items: [LocalFeedImage]
+            let items: [CodableLocalFeedImage]
             let timeStamp: Date
+
+            var localFeed: [LocalFeedImage] {
+                items.map{ $0.localFeedImage }
+            }
         }
 
         private let storeURL: URL = FileManager.default.urls(for: .documentDirectory,
@@ -16,7 +37,7 @@ final class CodableFeedStoreTests: XCTestCase {
 
         func insert(_ items: [LocalFeedImage], timeStamp: Date, completion: @escaping FeedStore.InsertionCompletion) {
             let encoder = JSONEncoder()
-            let encodedData = try! encoder.encode(Cache(items: items, timeStamp: timeStamp))
+            let encodedData = try! encoder.encode(Cache(items: items.map(CodableLocalFeedImage.init), timeStamp: timeStamp))
             try! encodedData.write(to: storeURL)
             completion(nil)
         }
@@ -27,7 +48,7 @@ final class CodableFeedStoreTests: XCTestCase {
             }
             let decoder = JSONDecoder()
             let cache = try! decoder.decode(Cache.self, from: data)
-            completion(.found(cache.items, cache.timeStamp))
+            completion(.found(cache.localFeed, cache.timeStamp))
         }
     }
 
