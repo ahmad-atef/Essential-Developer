@@ -55,13 +55,19 @@ final class CodableFeedStoreTests: XCTestCase {
         }
     }
 
+    /// Clean any artefact Before/After running the test.
+    private func setupEmptyState() {
+        try? FileManager.default.removeItem(at: testSpecificStoreURL())
+    }
+
     override func setUp() {
         super.setUp()
-        try? FileManager.default.removeItem(at: testSpecificStoreURL()) // clean any artefact before starting any test.
+        setupEmptyState()
     }
 
     override func tearDown() {
-        try? FileManager.default.removeItem(at: testSpecificStoreURL()) // clean up any artefact after executing the test. To be a good citizen.
+        setupEmptyState()
+        super.tearDown()
     }
 
     // retrieve from empty cache delivers empty result.
