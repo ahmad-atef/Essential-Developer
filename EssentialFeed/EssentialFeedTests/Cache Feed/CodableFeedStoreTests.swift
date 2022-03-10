@@ -4,6 +4,16 @@ import EssentialFeed
 final class CodableFeedStoreTests: XCTestCase {
 
     class CodableFeedStore {
+
+        private struct Cache: Codable {
+            let items: [CodableLocalFeedImage]
+            let timeStamp: Date
+
+            var localFeed: [LocalFeedImage] {
+                items.map{ $0.localFeedImage }
+            }
+        }
+
         private struct CodableLocalFeedImage: Codable {
             public let id: UUID
             public let description: String?
@@ -22,14 +32,6 @@ final class CodableFeedStoreTests: XCTestCase {
             }
         }
 
-        private struct Cache: Codable {
-            let items: [CodableLocalFeedImage]
-            let timeStamp: Date
-
-            var localFeed: [LocalFeedImage] {
-                items.map{ $0.localFeedImage }
-            }
-        }
 
         private let storeURL: URL = FileManager.default.urls(for: .documentDirectory,
                                                                 in: .userDomainMask)
@@ -65,7 +67,7 @@ final class CodableFeedStoreTests: XCTestCase {
 
     // retrieve from empty cache delivers empty result.
     func test_retrieve_deliversEmptyResultOnEmptyCache() {
-        let sut = CodableFeedStore()
+        let sut = makeSUT()
         let exp = expectation(description: "Wait for cache retrieval")
 
         sut.retrieve { result in
@@ -82,7 +84,7 @@ final class CodableFeedStoreTests: XCTestCase {
 
     // retrieve multiple times from empty cache should return the same empty results each time.
     func test_retrieve_hasNoSideEffectOnEmptyCache() {
-        let sut = CodableFeedStore()
+        let sut = makeSUT()
         sut.retrieve { firstResult in
             sut.retrieve { secondResult in
                 switch (firstResult, secondResult) {
@@ -102,7 +104,7 @@ final class CodableFeedStoreTests: XCTestCase {
     // retrieve from non empty cache, should return the saved image.
     func test_retrieve_deliversSavedResultsOnNonEmptyCache() {
         // given
-        let sut = CodableFeedStore()
+        let sut = makeSUT()
         let items: [LocalFeedImage] = [.unique]
         let timeStamp = Date()
         let exp = expectation(description: "Waiting for cache retrieval")
@@ -122,5 +124,9 @@ final class CodableFeedStoreTests: XCTestCase {
             }
         }
         wait(for: [exp], timeout: 1.0)
+    }
+
+    private func makeSUT() -> CodableFeedStore {
+        CodableFeedStore()
     }
 }
