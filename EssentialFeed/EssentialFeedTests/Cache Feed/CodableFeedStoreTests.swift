@@ -79,20 +79,7 @@ final class CodableFeedStoreTests: XCTestCase {
     // retrieve multiple times from empty cache should return the same empty results each time.
     func test_retrieve_hasNoSideEffectOnEmptyCache() {
         let sut = makeSUT()
-        sut.retrieve { firstResult in
-            sut.retrieve { secondResult in
-                switch (firstResult, secondResult) {
-                case (.empty, .empty):
-                    break
-                default:
-                    XCTFail("""
-                            Expected retrieving twice from empty cache to deliver empty results,
-                            found \(firstResult) and \(secondResult) instead
-                            """)
-                }
-            }
-        }
-
+        expect(sut, toRetrieveTwice: .empty)
     }
 
     // retrieve from non empty cache, should return the saved image.
@@ -114,7 +101,26 @@ final class CodableFeedStoreTests: XCTestCase {
         expect(sut, toRetrieve: .found(items, timeStamp))
     }
 
+    func test_retrieve_hasNoSideEffectOnNonEmptyCache() {
+        // given
+        let sut = makeSUT()
+        let items: [LocalFeedImage] = [.unique]
+        let timeStamp = Date()
+        let exp = expectation(description: "Waiting for cache insertion")
+
+        // when
+        sut.insert(items, timeStamp: timeStamp) { error in
+            XCTAssertNil(error, "Expected feed to be inserted successfully")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+
+        // then
+        expect(sut, toRetrieveTwice: .found(items, timeStamp))
+    }
+
     // MARK: Helper methods
+
     private func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> CodableFeedStore {
         let storeURL = testSpecificStoreURL()
         let sut = CodableFeedStore(storeURL: storeURL)
@@ -129,6 +135,11 @@ final class CodableFeedStoreTests: XCTestCase {
                      in: .userDomainMask)
             .first!
             .appendingPathComponent("\(type(of: self)).store")
+    }
+
+    private func expect(_ sut: CodableFeedStore, toRetrieveTwice expectedResult: RetrieveFeedResult, file: StaticString = #file, line: UInt = #line) {
+        expect(sut, toRetrieve: expectedResult)
+        expect(sut, toRetrieve: expectedResult)
     }
 
     private func expect(_ sut: CodableFeedStore, toRetrieve expectedResult: RetrieveFeedResult, file: StaticString = #file, line: UInt = #line) {
