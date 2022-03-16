@@ -71,7 +71,7 @@ final class CodableFeedStoreTests: XCTestCase {
     }
 
     // retrieve from empty cache delivers empty result.
-    func test_retrieve_deliversEmptyResultOnEmptyCache() {
+    func test_retrieve_deliversEmptyOnEmptyCache() {
         let sut = makeSUT()
         expect(sut, toRetrieve: .empty)
     }
@@ -83,7 +83,7 @@ final class CodableFeedStoreTests: XCTestCase {
     }
 
     // retrieve from non empty cache, should return the saved image.
-    func test_retrieve_deliversSavedResultsOnNonEmptyCache() {
+    func test_retrieve_deliversFoundValuesOnNonEmptyCache() {
         // given
         let sut = makeSUT()
         let items: [LocalFeedImage] = [.unique]
