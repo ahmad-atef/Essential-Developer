@@ -50,8 +50,12 @@ final class CodableFeedStoreTests: XCTestCase {
                 return completion(.empty)
             }
             let decoder = JSONDecoder()
-            let cache = try! decoder.decode(Cache.self, from: data)
-            completion(.found(cache.localFeed, cache.timeStamp))
+            do {
+                let cache = try decoder.decode(Cache.self, from: data)
+                completion(.found(cache.localFeed, cache.timeStamp))
+            } catch {
+                completion(.failure(error))
+            }
         }
     }
 
@@ -109,6 +113,16 @@ final class CodableFeedStoreTests: XCTestCase {
         expect(sut, toRetrieveTwice: .found(items, timeStamp))
     }
 
+    func test_retrieve_shouldReturnErrorOnError() {
+        let sut = makeSUT()
+        insertWrongData(to: sut)
+
+        enum FakeError: Error { case any }
+        expect(sut, toRetrieve: .failure(FakeError.any))
+    }
+
+
+
     // MARK: Helper methods
 
     private func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> CodableFeedStore {
@@ -138,6 +152,7 @@ final class CodableFeedStoreTests: XCTestCase {
         sut.retrieve { retrievedResult in
             switch (retrievedResult, expectedResult) {
             case (.empty, .empty): break
+            case (.failure, .failure): break
             case let (.found(retrievedItems, retrievedDate), .found(expectedItems, expectedDate)):
                 XCTAssertEqual(retrievedItems, expectedItems)
                 XCTAssertEqual(retrievedDate, expectedDate)
@@ -160,5 +175,10 @@ final class CodableFeedStoreTests: XCTestCase {
             exp.fulfill()
         }
         wait(for: [exp], timeout: 1.0)
+    }
+
+    // make a wrong state to the same place we reading the data from.
+    private func insertWrongData(to sut: CodableFeedStore) {
+        try! "invalid data".write(to: testSpecificStoreURL(), atomically: false, encoding: .utf8)
     }
 }
