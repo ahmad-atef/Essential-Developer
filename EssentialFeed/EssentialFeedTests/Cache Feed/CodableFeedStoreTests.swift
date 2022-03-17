@@ -114,8 +114,13 @@ final class CodableFeedStoreTests: XCTestCase {
     }
 
     func test_retrieve_shouldReturnErrorOnError() {
-        let sut = makeSUT()
-        insertWrongData(to: sut)
+        // given
+        let storeURL = testSpecificStoreURL()
+        let sut = makeSUT(storeURL: storeURL)
+
+        //when
+        // make a wrong state to the same place we reading the data from.
+        try! "invalid data".write(to: storeURL, atomically: false, encoding: .utf8)
 
         enum FakeError: Error { case any }
         expect(sut, toRetrieve: .failure(FakeError.any))
@@ -125,8 +130,8 @@ final class CodableFeedStoreTests: XCTestCase {
 
     // MARK: Helper methods
 
-    private func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> CodableFeedStore {
-        let storeURL = testSpecificStoreURL()
+    private func makeSUT(storeURL: URL? = nil, file: StaticString = #filePath, line: UInt = #line) -> CodableFeedStore {
+        let storeURL = storeURL ?? testSpecificStoreURL()
         let sut = CodableFeedStore(storeURL: storeURL)
         trackForMemoryLeaks(sut, file: file, line: line)
         return sut
@@ -175,10 +180,5 @@ final class CodableFeedStoreTests: XCTestCase {
             exp.fulfill()
         }
         wait(for: [exp], timeout: 1.0)
-    }
-
-    // make a wrong state to the same place we reading the data from.
-    private func insertWrongData(to sut: CodableFeedStore) {
-        try! "invalid data".write(to: testSpecificStoreURL(), atomically: false, encoding: .utf8)
     }
 }
