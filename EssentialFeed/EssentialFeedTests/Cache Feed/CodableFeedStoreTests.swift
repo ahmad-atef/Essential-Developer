@@ -63,6 +63,18 @@ final class CodableFeedStoreTests: XCTestCase {
                 completion(.failure(error))
             }
         }
+
+        func deleteCachedFeed(completion: @escaping FeedStore.DeletionCompletion) {
+            guard FileManager.default.fileExists(atPath: storeURL.path) else {
+                return completion(nil)
+            }
+            do {
+                try FileManager.default.removeItem(at: storeURL)
+                completion(nil)
+            } catch {
+                completion(error)
+            }
+        }
     }
 
     /// Clean any artefact Before/After running the test.
@@ -126,6 +138,7 @@ final class CodableFeedStoreTests: XCTestCase {
 
         //when
         // make a wrong state to the same place we reading the data from.
+        // fake as the store url found a courrpted data
         try! "invalid data".write(to: storeURL, atomically: false, encoding: .utf8)
 
         enum FakeError: Error { case any }
@@ -173,6 +186,19 @@ final class CodableFeedStoreTests: XCTestCase {
 
     }
 
+    // delete from empty cache should deliver empty / has no side effect
+    func test_delete_shouldDeliverEmptyOnEmptyCache() {
+        let sut = makeSUT()
+        let expectedError = clearCache(sut)
+
+        XCTAssertNil(expectedError, "expected empty cache deletion to succeed")
+        expect(sut, toRetrieve: .empty)
+
+    }
+
+    // delete from non empty cahce should deliver saved image / has no side effect
+    // delete courrpted image should return error
+
     // MARK: Helper methods
 
     private func makeSUT(storeURL: URL? = nil, file: StaticString = #filePath, line: UInt = #line) -> CodableFeedStore {
@@ -201,8 +227,8 @@ final class CodableFeedStoreTests: XCTestCase {
 
         sut.retrieve { retrievedResult in
             switch (retrievedResult, expectedResult) {
-            case (.empty, .empty): break
-            case (.failure, .failure): break
+            case (.empty, .empty): break // ✅
+            case (.failure, .failure): break // ✅
             case let (.found(retrievedItems, retrievedDate), .found(expectedItems, expectedDate)):
                 XCTAssertEqual(retrievedItems, expectedItems)
                 XCTAssertEqual(retrievedDate, expectedDate)
@@ -224,6 +250,18 @@ final class CodableFeedStoreTests: XCTestCase {
         var expectedError: Error?
 
         sut.insert(cache, timeStamp: timeStamp) { error in
+            expectedError = error
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+        return expectedError
+    }
+
+    private func clearCache(_ sut: CodableFeedStore) -> Error? {
+        let exp = expectation(description: "waiting for deletion to finish")
+        var expectedError: Error?
+
+        sut.deleteCachedFeed { error in
             expectedError = error
             exp.fulfill()
         }
