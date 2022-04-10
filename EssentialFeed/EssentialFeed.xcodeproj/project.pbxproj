@@ -37,6 +37,7 @@
 		1ED6F77A26EBD01600981200 /* FeedItem+TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED6F77926EBD01600981200 /* FeedItem+TestData.swift */; };
 		1ED9295E26A169E7003A63EC /* LoadFeedFromCacheUseCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED9295D26A169E7003A63EC /* LoadFeedFromCacheUseCaseTests.swift */; };
 		1ED9DA94264E739D00169C39 /* RemoteFeedLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED9DA93264E739D00169C39 /* RemoteFeedLoader.swift */; };
+		E251F2612803205300CB59E6 /* URL+invalid.swift in Sources */ = {isa = PBXBuildFile; fileRef = E251F2602803205300CB59E6 /* URL+invalid.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -90,6 +91,7 @@
 		1ED6F77926EBD01600981200 /* FeedItem+TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FeedItem+TestData.swift"; sourceTree = "<group>"; };
 		1ED9295D26A169E7003A63EC /* LoadFeedFromCacheUseCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadFeedFromCacheUseCaseTests.swift; sourceTree = "<group>"; };
 		1ED9DA93264E739D00169C39 /* RemoteFeedLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFeedLoader.swift; sourceTree = "<group>"; };
+		E251F2602803205300CB59E6 /* URL+invalid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+invalid.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -217,6 +219,7 @@
 				1ED6F77926EBD01600981200 /* FeedItem+TestData.swift */,
 				1E7EE27827A6DB60006BB895 /* LocalFeedItem+TestData.swift */,
 				1E60C1FC26EBE3BA002F3F6E /* Date+ChangeTime.swift */,
+				E251F2602803205300CB59E6 /* URL+invalid.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -415,6 +418,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1E49678A27D6C74300C16887 /* CodableFeedStoreTests.swift in Sources */,
+				E251F2612803205300CB59E6 /* URL+invalid.swift in Sources */,
 				1E7EE27927A6DB60006BB895 /* LocalFeedItem+TestData.swift in Sources */,
 				1ED9295E26A169E7003A63EC /* LoadFeedFromCacheUseCaseTests.swift in Sources */,
 				1ED432F026EA998500DE0A9E /* NSError+Any.swift in Sources */,
