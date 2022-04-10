@@ -4,7 +4,6 @@ import EssentialFeed
 final class CodableFeedStoreTests: XCTestCase {
 
     class CodableFeedStore {
-
         private struct Cache: Codable {
             let items: [CodableLocalFeedImage]
             let timeStamp: Date
@@ -186,18 +185,31 @@ final class CodableFeedStoreTests: XCTestCase {
 
     }
 
-    // delete from empty cache should deliver empty / has no side effect
+
     func test_delete_shouldDeliverEmptyOnEmptyCache() {
         let sut = makeSUT()
-        let expectedError = clearCache(sut)
+        let expectedError = deleteCache(from: sut)
 
         XCTAssertNil(expectedError, "expected empty cache deletion to succeed")
         expect(sut, toRetrieve: .empty)
-
     }
 
-    // delete from non empty cahce should deliver saved image / has no side effect
-    // delete courrpted image should return error
+    func test_delete_shouldDeleteSavedImageOnNonEmptyCache() {
+        let sut = makeSUT()
+
+        let items: [LocalFeedImage] = [.unique]
+        let timestamp = Date()
+
+        let insertionError = insert(items, timeStamp: timestamp, to: sut)
+        XCTAssertNil(insertionError, "expected to in insert to cache successfully!")
+
+        let deletionError = deleteCache(from: sut)
+        XCTAssertNil(deletionError, "expected to in delete cache successfully!")
+
+        expect(sut, toRetrieve: .empty)
+    }
+
+    // delete corrupted image should return error
 
     // MARK: Helper methods
 
@@ -257,7 +269,7 @@ final class CodableFeedStoreTests: XCTestCase {
         return expectedError
     }
 
-    private func clearCache(_ sut: CodableFeedStore) -> Error? {
+    private func deleteCache(from sut: CodableFeedStore) -> Error? {
         let exp = expectation(description: "waiting for deletion to finish")
         var expectedError: Error?
 
