@@ -209,7 +209,14 @@ final class CodableFeedStoreTests: XCTestCase {
         expect(sut, toRetrieve: .empty)
     }
 
-    // delete corrupted image should return error
+    // delete with no-permission store url should fail, e.g: `cache directory`
+    func test_delete_shouldDeliverErrorOnDeletionError() {
+        let noDeletePermissionURL: URL = .cache
+        let sut = makeSUT(storeURL: noDeletePermissionURL)
+
+        let deletionError = deleteCache(from: sut)
+        XCTAssertNotNil(deletionError, "expected to fail on delete from cache store url!")
+    }
 
     // MARK: Helper methods
 
@@ -280,4 +287,8 @@ final class CodableFeedStoreTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         return expectedError
     }
+}
+
+private extension URL {
+    static let cache: URL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
 }
