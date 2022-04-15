@@ -12,6 +12,7 @@
 		1E2B5857268319690083BB41 /* EssentialFeed.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EC1CAD9263A95190074239B /* EssentialFeed.framework */; };
 		1E2B585D26831BB60083BB41 /* XCTestCase+MemoryLeakTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC6F685267B34D500BD5175 /* XCTestCase+MemoryLeakTracking.swift */; };
 		1E4316C427B1627000847F64 /* ValidateCacheUseCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4316C327B1627000847F64 /* ValidateCacheUseCaseTests.swift */; };
+		1E49678A27D6C74300C16887 /* CodableFeedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E49678927D6C74300C16887 /* CodableFeedStoreTests.swift */; };
 		1E4E4C7B26BBC63100ECB9E6 /* LocalFeedLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4E4C7A26BBC63100ECB9E6 /* LocalFeedLoader.swift */; };
 		1E60C1FD26EBE3BA002F3F6E /* Date+ChangeTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E60C1FC26EBE3BA002F3F6E /* Date+ChangeTime.swift */; };
 		1E65085D268DA09300B5BB21 /* ImageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E65085C268DA09300B5BB21 /* ImageItem.swift */; };
@@ -36,6 +37,8 @@
 		1ED6F77A26EBD01600981200 /* FeedItem+TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED6F77926EBD01600981200 /* FeedItem+TestData.swift */; };
 		1ED9295E26A169E7003A63EC /* LoadFeedFromCacheUseCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED9295D26A169E7003A63EC /* LoadFeedFromCacheUseCaseTests.swift */; };
 		1ED9DA94264E739D00169C39 /* RemoteFeedLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED9DA93264E739D00169C39 /* RemoteFeedLoader.swift */; };
+		E251F2612803205300CB59E6 /* URL+invalid.swift in Sources */ = {isa = PBXBuildFile; fileRef = E251F2602803205300CB59E6 /* URL+invalid.swift */; };
+		E251F2632803252700CB59E6 /* CodableFeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E251F2622803252700CB59E6 /* CodableFeedStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +64,7 @@
 		1E2B5854268319690083BB41 /* EssentialFeedAPIEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EssentialFeedAPIEndToEndTests.swift; sourceTree = "<group>"; };
 		1E2B5856268319690083BB41 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1E4316C327B1627000847F64 /* ValidateCacheUseCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidateCacheUseCaseTests.swift; sourceTree = "<group>"; };
+		1E49678927D6C74300C16887 /* CodableFeedStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableFeedStoreTests.swift; sourceTree = "<group>"; };
 		1E4E4C7A26BBC63100ECB9E6 /* LocalFeedLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFeedLoader.swift; sourceTree = "<group>"; };
 		1E60C1FC26EBE3BA002F3F6E /* Date+ChangeTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+ChangeTime.swift"; sourceTree = "<group>"; };
 		1E65085C268DA09300B5BB21 /* ImageItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageItem.swift; sourceTree = "<group>"; };
@@ -88,6 +92,8 @@
 		1ED6F77926EBD01600981200 /* FeedItem+TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FeedItem+TestData.swift"; sourceTree = "<group>"; };
 		1ED9295D26A169E7003A63EC /* LoadFeedFromCacheUseCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadFeedFromCacheUseCaseTests.swift; sourceTree = "<group>"; };
 		1ED9DA93264E739D00169C39 /* RemoteFeedLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFeedLoader.swift; sourceTree = "<group>"; };
+		E251F2602803205300CB59E6 /* URL+invalid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+invalid.swift"; sourceTree = "<group>"; };
+		E251F2622803252700CB59E6 /* CodableFeedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableFeedStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +150,7 @@
 				1E6B9F2926C0697F00F99DFA /* LocalFeedImage.swift */,
 				1ED432E826EA41C700DE0A9E /* LocalFeedItem+FeedItem.swift */,
 				1EC4876C27CFDFFB001F0FCD /* FeedCachePolicy.swift */,
+				E251F2622803252700CB59E6 /* CodableFeedStore.swift */,
 			);
 			path = "Feed Cache";
 			sourceTree = "<group>";
@@ -185,7 +192,7 @@
 				1EC1CAE9263A95190074239B /* Info.plist */,
 				1EC6F684267B349C00BD5175 /* Helper */,
 				1E42A7E7266C2784008D57F1 /* Feed API */,
-				1ED9295F26A169F5003A63EC /* Cache Feed Use Case */,
+				1ED9295F26A169F5003A63EC /* Cache Feed */,
 			);
 			path = EssentialFeedTests;
 			sourceTree = "<group>";
@@ -215,11 +222,12 @@
 				1ED6F77926EBD01600981200 /* FeedItem+TestData.swift */,
 				1E7EE27827A6DB60006BB895 /* LocalFeedItem+TestData.swift */,
 				1E60C1FC26EBE3BA002F3F6E /* Date+ChangeTime.swift */,
+				E251F2602803205300CB59E6 /* URL+invalid.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
 		};
-		1ED9295F26A169F5003A63EC /* Cache Feed Use Case */ = {
+		1ED9295F26A169F5003A63EC /* Cache Feed */ = {
 			isa = PBXGroup;
 			children = (
 				1ED432EE26EA996A00DE0A9E /* Helpers */,
@@ -227,8 +235,9 @@
 				1ED432EA26EA429A00DE0A9E /* LoadFromCacheUseCaseTests.swift */,
 				1E4316C327B1627000847F64 /* ValidateCacheUseCaseTests.swift */,
 				1ED432EC26EA42E500DE0A9E /* SpyStore.swift */,
+				1E49678927D6C74300C16887 /* CodableFeedStoreTests.swift */,
 			);
-			path = "Cache Feed Use Case";
+			path = "Cache Feed";
 			sourceTree = "<group>";
 		};
 		1ED9DA92264E739000169C39 /* Feed API */ = {
@@ -395,6 +404,7 @@
 				1EC4876D27CFDFFB001F0FCD /* FeedCachePolicy.swift in Sources */,
 				1E89FB8E266A795A00B1421B /* FeedItemMapper.swift in Sources */,
 				1E6B9F2E26C069C400F99DFA /* CacheFeedLoader.swift in Sources */,
+				E251F2632803252700CB59E6 /* CodableFeedStore.swift in Sources */,
 				1E89FB8C266A788A00B1421B /* HTTPClient.swift in Sources */,
 				1E6B9F2A26C0697F00F99DFA /* LocalFeedImage.swift in Sources */,
 				1ED9DA94264E739D00169C39 /* RemoteFeedLoader.swift in Sources */,
@@ -411,6 +421,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E49678A27D6C74300C16887 /* CodableFeedStoreTests.swift in Sources */,
+				E251F2612803205300CB59E6 /* URL+invalid.swift in Sources */,
 				1E7EE27927A6DB60006BB895 /* LocalFeedItem+TestData.swift in Sources */,
 				1ED9295E26A169E7003A63EC /* LoadFeedFromCacheUseCaseTests.swift in Sources */,
 				1ED432F026EA998500DE0A9E /* NSError+Any.swift in Sources */,
@@ -446,7 +458,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = M2XWCGAHWF;
+				DEVELOPMENT_TEAM = LG4XB4J5E3;
 				INFOPLIST_FILE = EssentialFeedAPIEndToEndTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -465,7 +477,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = M2XWCGAHWF;
+				DEVELOPMENT_TEAM = LG4XB4J5E3;
 				INFOPLIST_FILE = EssentialFeedAPIEndToEndTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -607,7 +619,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = M2XWCGAHWF;
+				DEVELOPMENT_TEAM = LG4XB4J5E3;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -633,7 +645,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = M2XWCGAHWF;
+				DEVELOPMENT_TEAM = LG4XB4J5E3;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -658,7 +670,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = M2XWCGAHWF;
+				DEVELOPMENT_TEAM = LG4XB4J5E3;
 				INFOPLIST_FILE = EssentialFeedTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -679,7 +691,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = M2XWCGAHWF;
+				DEVELOPMENT_TEAM = LG4XB4J5E3;
 				INFOPLIST_FILE = EssentialFeedTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
