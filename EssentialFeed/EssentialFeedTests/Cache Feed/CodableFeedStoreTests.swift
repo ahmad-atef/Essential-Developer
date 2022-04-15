@@ -145,6 +145,36 @@ final class CodableFeedStoreTests: XCTestCase {
         XCTAssertNotNil(deletionError, "expected to fail on delete from cache store url!")
     }
 
+    func test_SUTSideEffects_runSerially() {
+        let sut = makeSUT()
+        let items: [LocalFeedImage] = [.unique]
+        let timestamp = Date()
+
+        let exp1 = expectation(description: "waiting for first operation (insert) to finish")
+        var expectations = [XCTestExpectation]()
+
+        sut.insert(items, timeStamp: timestamp, completion: { _ in
+            expectations.append(exp1)
+            exp1.fulfill()
+        })
+
+        let exp2 = expectation(description: "waiting for operation #2 (delete) to finish")
+        sut.insert(items, timeStamp: timestamp, completion: { _ in
+            expectations.append(exp2)
+            exp2.fulfill()
+        })
+
+        let exp3 = expectation(description: "waiting for operation#3 (insert) to finish")
+        sut.insert(items, timeStamp: timestamp, completion: { _ in
+            expectations.append(exp3)
+            exp3.fulfill()
+        })
+
+        wait(for: [exp1,exp2, exp3], timeout: 5.0)
+
+        XCTAssertEqual(expectations, [exp1, exp2, exp3])
+
+    }
     // MARK: Helper methods
 
     private func makeSUT(storeURL: URL? = nil, file: StaticString = #filePath, line: UInt = #line) -> FeedStore {
