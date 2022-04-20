@@ -13,7 +13,7 @@ extension Date {
 
     /// DSL for MaxAge for feed cache.
     public func minusFeedCacheMaxAge() -> Date {
-        adding(days: feedCacheMaxAgeInDays)
+        adding(days: -feedCacheMaxAgeInDays)
     }
 }
 

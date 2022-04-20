@@ -1,19 +1,9 @@
 import XCTest
 import EssentialFeed
 
-// Store can do the following operations:
-// `insert`
-// `delete`
-// `retrieve`
-
-// Service have two commands / API
-// - loadItems
-// - saveItems
-
-
 final class LoadFromCacheUseCaseTests: XCTestCase {
 
-    func testLoadRequestInsertOperation() {
+    func test_load_requestInsertOperation() {
         let (service, store) = makeSUT()
 
         service.loadItems { _ in }
@@ -21,21 +11,21 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.retrieval])
     }
 
-    func testLoadCommandFailsWhenStoreFailsToRetrieve() {
+    func test_load_failsOnStoreFailure() {
         let (service, store) = makeSUT()
         expect(service, toCompleteLoadingWith: .failure(NSError.anyNSError)) {
             store.completeRetrievalWithError(NSError.anyNSError)
         }
     }
 
-    func testLoadCommandDeliversNoImagesOnEmptyCache() {
+    func test_load_deliversNoImagesOnEmptyCache() {
         let (service, store) = makeSUT()
         expect(service, toCompleteLoadingWith: .success([])) {
             store.completeRetrievalSuccessfullyWithItems([])
         }
     }
 
-    func testLoadCommandShouldSuccessWhenStoreRetrievalSuccess() {
+    func test_load_shouldSuccessOnStoreRetrievalSuccess() {
         let (service, store) = makeSUT()
         let items = uniqueItems().local
 
@@ -44,7 +34,7 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
         }
     }
 
-    func testLoadCommandDeliversCachedImagesSuccessfullyOnValidCache() {
+    func test_load_deliversCachedImagesOnValidCache() {
         let (service, store) = makeSUT()
         let items = uniqueItems().local
         let validTimeStamp = Date().minusFeedCacheMaxAge().adding(seconds: 1)
@@ -54,7 +44,7 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
         }
     }
 
-    func testLoadCommandDeliversNoImagesOnJustExpiredCache() {
+    func test_load_deliversNoImagesOnJustExpiredCache() {
         let items = uniqueItems().local
         let expiredTimeStamp = Date().minusFeedCacheMaxAge()
         let (service, store) = makeSUT()
@@ -64,7 +54,7 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
         }
     }
 
-    func testLoadCommandDeliversNoImagesOnExpiredCache() {
+    func test_load_deliversNoImagesOnExpiredCache() {
         let (service, store) = makeSUT()
         let items = uniqueItems().local
 
@@ -74,7 +64,8 @@ final class LoadFromCacheUseCaseTests: XCTestCase {
     }
 }
 
-extension LoadFromCacheUseCaseTests {
+// MARK: Helper Factory methods
+private extension LoadFromCacheUseCaseTests {
     private func makeSUT(currentDate: Date  = .init(), _ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
         let store = SpyFeedStore()
         let sut = LocalFeedLoader(store, currentDate: currentDate)
