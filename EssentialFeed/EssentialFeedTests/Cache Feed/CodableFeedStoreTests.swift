@@ -24,7 +24,7 @@ final class CodableFeedStoreTests: XCTestCase, FeedStoreSpecs, FailableFeedStore
     // retrieve from empty cache should deliver empty result.
     func test_retrieve_deliversEmptyOnEmptyCache() {
         let sut = makeSUT()
-        expect(sut, toRetrieve: .empty)
+        assertThatRetrieveDeliversEmptyOnEmptyCache(on :sut)
     }
 
     // retrieve multiple times from empty cache should return the same empty results each time.
