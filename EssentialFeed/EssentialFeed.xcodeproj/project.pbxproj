@@ -41,6 +41,7 @@
 		E251F2632803252700CB59E6 /* CodableFeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E251F2622803252700CB59E6 /* CodableFeedStore.swift */; };
 		E2705B23280DA204005A2922 /* URLSessionHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2705B22280DA204005A2922 /* URLSessionHTTPClient.swift */; };
 		E2CEC4B6282A88C800021DA1 /* FeedStoreSpecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CEC4B5282A88C800021DA1 /* FeedStoreSpecs.swift */; };
+		E2CEC4B8282A93C600021DA1 /* XCTestCase+FeedStoreSpecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CEC4B7282A93C600021DA1 /* XCTestCase+FeedStoreSpecs.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,6 +99,7 @@
 		E251F2622803252700CB59E6 /* CodableFeedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableFeedStore.swift; sourceTree = "<group>"; };
 		E2705B22280DA204005A2922 /* URLSessionHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionHTTPClient.swift; sourceTree = "<group>"; };
 		E2CEC4B5282A88C800021DA1 /* FeedStoreSpecs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedStoreSpecs.swift; sourceTree = "<group>"; };
+		E2CEC4B7282A93C600021DA1 /* XCTestCase+FeedStoreSpecs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+FeedStoreSpecs.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,6 +242,7 @@
 				1E4316C327B1627000847F64 /* ValidateCacheUseCaseTests.swift */,
 				1ED432EC26EA42E500DE0A9E /* SpyStore.swift */,
 				1E49678927D6C74300C16887 /* CodableFeedStoreTests.swift */,
+				E2CEC4B7282A93C600021DA1 /* XCTestCase+FeedStoreSpecs.swift */,
 				E2CEC4B5282A88C800021DA1 /* FeedStoreSpecs.swift */,
 			);
 			path = "Cache Feed";
@@ -436,6 +439,7 @@
 				1E4316C427B1627000847F64 /* ValidateCacheUseCaseTests.swift in Sources */,
 				1E6F11152647D917005F9F2B /* LoadFeedFromRemoteUseCaseTests.swift in Sources */,
 				1E60C1FD26EBE3BA002F3F6E /* Date+ChangeTime.swift in Sources */,
+				E2CEC4B8282A93C600021DA1 /* XCTestCase+FeedStoreSpecs.swift in Sources */,
 				E2CEC4B6282A88C800021DA1 /* FeedStoreSpecs.swift in Sources */,
 				1ED432ED26EA42E500DE0A9E /* SpyStore.swift in Sources */,
 				1E7733E726733A1800277C35 /* URLSessionHTTPClientTests.swift in Sources */,
