@@ -1,3 +1,6 @@
+
+[![CI](https://github.com/ahmad-atef/Essential-Developer/actions/workflows/CI.yaml/badge.svg)](https://github.com/ahmad-atef/Essential-Developer/actions/workflows/CI.yaml)
+
 # Essential App Case Study
 
 ## Feature: Image Feed Features Specs
