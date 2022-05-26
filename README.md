@@ -1,4 +1,4 @@
-[![CI](https://github.com/ahmad-atef/Essential-Developer/actions/workflows/CI.yaml/badge.svg)](https://github.com/ahmad-atef/Essential-Developer/actions/workflows/CI.yaml)
+[![CI](https://github.com/ahmad-atef/Essential-Developer/actions/workflows/CI.yaml/badge.svg?branch=migrate-ci-to-gh-actions)](https://github.com/ahmad-atef/Essential-Developer/actions/workflows/CI.yaml)
 
 # Essential App Case Study
 
