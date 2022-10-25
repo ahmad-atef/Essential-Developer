@@ -50,6 +50,8 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(expectedError, .anyNSError)
     }
 
+    // save should request delete on the store.
+    // If deletion success, then we should request insert
     func test_save_requestsNewCacheInsertionWithTimestampOnSuccessfulDeletion() {
         let timestamp = Date()
         let (sut, store) = makeSUT(currentDate: timestamp)
@@ -171,7 +173,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.operations, [.retrieval])
     }
 
-    // From memory management wise, if the local feed loader has been removed from memoer
+    // From memory management wise, if the local feed loader has been removed from memoery
     // then, we should NOT receive any results when calling the load command.
     // other wise, that means we have memory leaks.
     // If the SUT has been removed from memory, and EVEN IF the store completed retrieval successfully
@@ -191,6 +193,20 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertTrue(receivedResults.isEmpty)
     }
 
+    func test_save_doesNotDeliverErrorAfterSUTHasBeenDeallocated() {
+        // given
+        let store = SpyFeedStore()
+        var sut: LocalFeedLoader? = LocalFeedLoader(store, currentDate: Date())
+
+        // when
+        var receivedResults = [Error?]()
+        sut?.save(items: [.unique], completion: { receivedResults.append($0) })
+        sut = nil
+        store.completeDeletionWithError(.anyNSError)
+
+        // then
+        XCTAssertTrue(receivedResults.isEmpty)
+    }
     func test_deallocation_behavior_onDeleteCacheError() {
         let feedStore = SpyFeedStore()
         var localFeedLoader: LocalFeedLoader? = .init(feedStore, currentDate: .init())

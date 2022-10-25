@@ -146,9 +146,9 @@
 		1E4E4C7926BBC61100ECB9E6 /* Feed Cache */ = {
 			isa = PBXGroup;
 			children = (
+				1E05824426BD2508004934A2 /* FeedStore.swift */,
 				1E4E4C7A26BBC63100ECB9E6 /* LocalFeedLoader.swift */,
 				1E6B9F2D26C069C400F99DFA /* CacheFeedLoader.swift */,
-				1E05824426BD2508004934A2 /* FeedStore.swift */,
 				1E6B9F2926C0697F00F99DFA /* LocalFeedImage.swift */,
 				1ED432E826EA41C700DE0A9E /* LocalFeedItem+FeedItem.swift */,
 				1EC4876C27CFDFFB001F0FCD /* FeedCachePolicy.swift */,

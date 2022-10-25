@@ -1,5 +1,6 @@
 import Foundation
 
+// feed cache use case
 public class LocalFeedLoader: CacheFeedLoader {
     private let store: FeedStore
     private let currentDate: Date // start point to compare 🧑‍⚖️
