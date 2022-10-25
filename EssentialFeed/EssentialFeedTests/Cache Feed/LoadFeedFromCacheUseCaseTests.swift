@@ -29,7 +29,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 
     // When Save, and the Store fails
-    // I should receive failure error 
+    // I should receive failure error
     func test_save_doesNotRequestCacheInsertionOnDeletionError() {
 
         // Given
@@ -167,7 +167,7 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         let currentDate = Date()
         let (sut, store) = makeSUT(currentDate: currentDate)
 
-        let invalidInsertion: (items: [LocalFeedImage], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge().adding(seconds: -1)) // 7 
+        let invalidInsertion: (items: [LocalFeedImage], timeStamp: Date) = ([.unique], currentDate.minusFeedCacheMaxAge().adding(seconds: -1)) // 7
         sut.loadItems(completion: { _ in })
         store.completeRetrievalSuccessfullyWithItems(invalidInsertion.items, timeStamp: invalidInsertion.timeStamp)
         XCTAssertEqual(store.operations, [.retrieval])
@@ -193,13 +193,17 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertTrue(receivedResults.isEmpty)
     }
 
-    func test_save_doesNotDeliverErrorAfterSUTHasBeenDeallocated() {
+    func test_save_doesNotDeliverDeletionErrorAfterSUTHasBeenDeallocated() {
         // given
         let store = SpyFeedStore()
         var sut: LocalFeedLoader? = LocalFeedLoader(store, currentDate: Date())
+        var receivedResults = [Error?]()
 
         // when
-        var receivedResults = [Error?]()
+        // here we are testing for the main command `save`
+        // when the store fails to delete, we expect to receive an error
+        // but because the `sut` has been deallocated just before the `store` to complete, we should pail
+        // and we should not receive any result.
         sut?.save(items: [.unique], completion: { receivedResults.append($0) })
         sut = nil
         store.completeDeletionWithError(.anyNSError)
@@ -207,6 +211,32 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
         // then
         XCTAssertTrue(receivedResults.isEmpty)
     }
+
+    func test_save_doesNotDeliverInsertionErrorAfterSUTHasBeenDeallocated() {
+        // given
+        let store = SpyFeedStore()
+        var sut: LocalFeedLoader? = LocalFeedLoader(store, currentDate: Date())
+        var receivedResults = [Error?]()
+
+        // when
+
+        // here we are testing for the main command `save`
+        // when the store deletes successfully
+        // and just before the `insert` will complete with error, the `sut` has been deallocated
+        // we should receive nothing
+
+        sut?.save(items: [.unique], completion: {
+            receivedResults.append($0)
+        })
+
+        store.completeDeletionSuccessfully()
+        sut = nil
+        store.completeInsertionWithError(.anyNSError)
+
+        // then
+        XCTAssertTrue(receivedResults.isEmpty)
+    }
+
     func test_deallocation_behavior_onDeleteCacheError() {
         let feedStore = SpyFeedStore()
         var localFeedLoader: LocalFeedLoader? = .init(feedStore, currentDate: .init())
@@ -242,7 +272,11 @@ final class LoadFeedFromCacheUseCaseTests: XCTestCase {
     }
 
 
-    private func makeSUT(currentDate: Date  = .init(), _ file: StaticString = #filePath, line: UInt = #line) ->(localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
+    private func makeSUT(
+        currentDate: Date  = .init(),
+        _ file: StaticString = #filePath,
+        line: UInt = #line
+    ) -> (localFeedLoader: LocalFeedLoader, store: SpyFeedStore) {
         let store = SpyFeedStore()
         let sut = LocalFeedLoader(store, currentDate: currentDate)
         trackForMemoryLeaks(store, file: file, line: line)
